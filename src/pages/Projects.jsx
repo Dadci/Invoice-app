@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import { BiPlus, BiSearch, BiFilter, BiSearchAlt, BiX, BiFlag } from "react-icons/bi";
 import { FiGrid, FiList, FiChevronDown } from "react-icons/fi";
-import { setProjectFilter, setServiceTypeFilter, setPriorityFilter, clearProjectFilters, setProjectSearchQuery } from "../store/projectsSlice";
+import { setProjectFilter, setServiceTypeFilter, setPriorityFilter, clearProjectFilters, setProjectSearchQuery, setActiveWorkspaceProjects } from "../store/projectsSlice";
 import { fadeIn, slideUp, staggerContainer, listItem } from "../utils/animations";
 import ProjectCard from "../components/ProjectCard";
 import ProjectItem from "../components/ProjectItem";
@@ -18,6 +18,7 @@ const Projects = () => {
     const serviceTypeFilter = useSelector(state => state.projects.serviceTypeFilter);
     const priorityFilter = useSelector(state => state.projects.priorityFilter);
     const searchQuery = useSelector(state => state.projects.searchQuery);
+    const currentWorkspace = useSelector(state => state.workspaces.currentWorkspace);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState("grid"); // grid or list
     const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +35,15 @@ const Projects = () => {
         { value: 'high', label: 'High', color: '#FF8F00' },
         { value: 'urgent', label: 'Urgent', color: '#EC5757' }
     ];
+
+    // Ensure we're viewing the correct workspace projects
+    useEffect(() => {
+        // Force refresh projects for current workspace when component mounts
+        if (currentWorkspace && currentWorkspace.id) {
+            console.log(`Projects page: Ensuring projects are from workspace ${currentWorkspace.id}`);
+            dispatch(setActiveWorkspaceProjects(currentWorkspace.id));
+        }
+    }, [currentWorkspace?.id, dispatch]);
 
     // Reset filters to default on component mount to avoid issues after page reload
     React.useEffect(() => {
@@ -66,8 +76,18 @@ const Projects = () => {
 
     // Filter and search projects
     const filteredProjects = useMemo(() => {
+        // Only show projects for the current workspace
+        let workspaceFiltered = projects;
+
+        if (currentWorkspace && currentWorkspace.id) {
+            console.log(`Filtering projects for workspace: ${currentWorkspace.id}`);
+            workspaceFiltered = projects.filter(project =>
+                project.workspaceId === currentWorkspace.id
+            );
+        }
+
         // First filter by status
-        let statusFiltered = projects.filter(project => {
+        let statusFiltered = workspaceFiltered.filter(project => {
             if (filter === 'all') return true;
             return project.status === filter;
         });
@@ -95,7 +115,7 @@ const Projects = () => {
             project.description?.toLowerCase().includes(query) ||
             project.client?.toLowerCase().includes(query)
         );
-    }, [projects, filter, serviceTypeFilter, priorityFilter, searchQuery]);
+    }, [projects, filter, serviceTypeFilter, priorityFilter, searchQuery, currentWorkspace]);
 
     const handleFilterChange = (newFilter) => {
         dispatch(setProjectFilter(newFilter));

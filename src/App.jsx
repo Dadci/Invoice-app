@@ -14,7 +14,7 @@ import ThemeInitializer from "./components/ThemeInitializer";
 import { checkAllReminders } from "./utils/reminderUtils";
 import { initializeWorkspaces } from "./store/workspacesSlice";
 import { setActiveWorkspaceInvoices } from "./store/invoicesSlice";
-import { setActiveWorkspaceProjects } from "./store/projectsSlice";
+import { setActiveWorkspaceProjects, reinitializeProjectStore } from "./store/projectsSlice";
 import { setActiveWorkspaceSettings } from "./store/settingsSlice";
 import OnboardingDialog from "./components/OnboardingDialog";
 import HelpButton from "./components/HelpButton";
@@ -35,6 +35,10 @@ const AppContent = () => {
     // Initialize workspaces
     dispatch(initializeWorkspaces());
 
+    // Fix any workspace project data issues on startup
+    console.log("Reinitializing project store on app startup");
+    dispatch(reinitializeProjectStore());
+
     // Check for reminders and invoice automation on initial load
     checkAllReminders();
 
@@ -53,8 +57,16 @@ const AppContent = () => {
       // Set flag to indicate workspace is switching
       setIsWorkspaceSwitching(true);
 
-      dispatch(setActiveWorkspaceInvoices(currentWorkspace.id));
+      console.log(`Switching to workspace: ${currentWorkspace.id}`);
+
+      // Always set workspace-specific data in the correct order:
+      // 1. First set active projects (this ensures project IDs are available for invoices)
       dispatch(setActiveWorkspaceProjects(currentWorkspace.id));
+
+      // 2. Then set active invoices (which might link to projects)
+      dispatch(setActiveWorkspaceInvoices(currentWorkspace.id));
+
+      // 3. Finally set active settings
       dispatch(setActiveWorkspaceSettings(currentWorkspace.id));
 
       // Check if this is a new workspace by comparing with the previous one
@@ -85,7 +97,7 @@ const AppContent = () => {
       // Reset the switching flag after a short delay to allow data to load
       setTimeout(() => {
         setIsWorkspaceSwitching(false);
-      }, 50);
+      }, 200);  // Increased from 50ms to 200ms to ensure data is properly loaded
     }
   }, [currentWorkspace?.id, dispatch, lastWorkspaceId, location.pathname, navigate]);
 

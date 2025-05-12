@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { BiPlus, BiPencil, BiTrash, BiCheck, BiX, BiChevronLeft, BiHelpCircle } from 'react-icons/bi';
+import { BiPlus, BiPencil, BiTrash, BiCheck, BiX, BiChevronLeft, BiHelpCircle, BiReset } from 'react-icons/bi';
 import {
     createWorkspace,
     updateWorkspace,
@@ -10,7 +10,7 @@ import {
     setCurrentWorkspace
 } from '../store/workspacesSlice';
 import { setActiveWorkspaceInvoices } from '../store/invoicesSlice';
-import { setActiveWorkspaceProjects } from '../store/projectsSlice';
+import { setActiveWorkspaceProjects, reinitializeProjectStore } from '../store/projectsSlice';
 import { setActiveWorkspaceSettings } from '../store/settingsSlice';
 import Header from '../components/Header';
 import { fadeIn } from '../utils/animations';
@@ -128,6 +128,18 @@ const WorkspaceManagement = () => {
         setShowOnboarding(true);
     };
 
+    // Emergency function to fix workspace data issues
+    const handleFixWorkspaceData = () => {
+        if (window.confirm('This will attempt to fix workspace data issues. Continue?')) {
+            console.log("Reinitializing project store...");
+            dispatch(reinitializeProjectStore());
+            if (currentWorkspace) {
+                dispatch(setActiveWorkspaceProjects(currentWorkspace.id));
+            }
+            alert('Project data has been reinitialized. Please switch workspaces to verify.');
+        }
+    };
+
     return (
         <div className="max-w-6xl mx-auto flex flex-col gap-8 px-6 md:px-8 pb-16">
             <Header />
@@ -156,6 +168,15 @@ const WorkspaceManagement = () => {
                             <span>New Workspace</span>
                         </button>
                     )}
+                    {/* Debug button - hidden in a way that's still accessible for admin/debugging */}
+                    <button
+                        onClick={handleFixWorkspaceData}
+                        className="hidden sm:flex px-4 py-2 border border-[#EC5757] text-[#EC5757] rounded-md items-center gap-2 hover:bg-[#EC5757]/10 transition-colors"
+                        title="Emergency: Fix workspace data issues"
+                    >
+                        <BiReset size={18} />
+                        <span>Fix Data</span>
+                    </button>
                 </div>
             </div>
 

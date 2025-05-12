@@ -4,19 +4,56 @@ import { createSlice } from '@reduxjs/toolkit'
 const loadProjectsFromStorage = () => {
     try {
         const savedProjects = localStorage.getItem('invoiceAppProjects')
+        console.log("Loading projects from storage:", savedProjects ? "Found data" : "No data");
         const parsedProjects = savedProjects ? JSON.parse(savedProjects) : null
 
         // Ensure all projects have the required properties set
-        if (parsedProjects && parsedProjects.projects) {
-            parsedProjects.projects = parsedProjects.projects.map(project => ({
-                ...project,
-                serviceTypes: Array.isArray(project.serviceTypes) ? project.serviceTypes : [],
-                hoursEstimated: project.hoursEstimated || 0,
-                hoursLogged: project.hoursLogged || 0,
-                invoices: Array.isArray(project.invoices) ? project.invoices : [],
-                priority: project.priority || 'medium', // Default priority if not present
-                tasks: Array.isArray(project.tasks) ? project.tasks : [] // Initialize tasks array
-            }))
+        if (parsedProjects) {
+            // Ensure workspaceProjects exists
+            if (!parsedProjects.workspaceProjects) {
+                console.log("No workspaceProjects found, initializing empty object");
+                parsedProjects.workspaceProjects = {};
+            } else {
+                console.log("Found workspaces in storage:", Object.keys(parsedProjects.workspaceProjects));
+            }
+
+            // Process all workspaces
+            Object.keys(parsedProjects.workspaceProjects).forEach(workspaceId => {
+                if (Array.isArray(parsedProjects.workspaceProjects[workspaceId])) {
+                    console.log(`Processing workspace ${workspaceId} with ${parsedProjects.workspaceProjects[workspaceId].length} projects`);
+                    parsedProjects.workspaceProjects[workspaceId] = parsedProjects.workspaceProjects[workspaceId].map(project => ({
+                        ...project,
+                        serviceTypes: Array.isArray(project.serviceTypes) ? project.serviceTypes : [],
+                        hoursEstimated: project.hoursEstimated || 0,
+                        hoursLogged: project.hoursLogged || 0,
+                        invoices: Array.isArray(project.invoices) ? project.invoices : [],
+                        priority: project.priority || 'medium',
+                        tasks: Array.isArray(project.tasks) ? project.tasks : [],
+                        workspaceId: project.workspaceId || workspaceId // Ensure workspaceId is set
+                    }));
+                } else {
+                    console.log(`Initializing empty array for workspace ${workspaceId}`);
+                    parsedProjects.workspaceProjects[workspaceId] = [];
+                }
+            });
+
+            // For backward compatibility, ensure projects array is set
+            if (parsedProjects.projects) {
+                console.log(`Found ${parsedProjects.projects.length} projects in legacy projects array`);
+                parsedProjects.projects = parsedProjects.projects.map(project => ({
+                    ...project,
+                    serviceTypes: Array.isArray(project.serviceTypes) ? project.serviceTypes : [],
+                    hoursEstimated: project.hoursEstimated || 0,
+                    hoursLogged: project.hoursLogged || 0,
+                    invoices: Array.isArray(project.invoices) ? project.invoices : [],
+                    priority: project.priority || 'medium',
+                    tasks: Array.isArray(project.tasks) ? project.tasks : [],
+                    workspaceId: project.workspaceId || 'default'
+                }));
+            } else {
+                console.log("No legacy projects array found, initializing empty array");
+                parsedProjects.projects = [];
+            }
 
             // Reset UI filters to default values
             parsedProjects.filter = 'all'
@@ -24,15 +61,13 @@ const loadProjectsFromStorage = () => {
             parsedProjects.priorityFilter = 'all'
             parsedProjects.searchQuery = ''
 
-            // Initialize workspaceProjects if it doesn't exist
-            if (!parsedProjects.workspaceProjects) {
-                parsedProjects.workspaceProjects = {}
-
-                // Migrate old projects to default workspace if needed
-                if (parsedProjects.projects && parsedProjects.projects.length > 0) {
-                    parsedProjects.workspaceProjects['default'] = parsedProjects.projects
-                }
+            // Migrate old projects to default workspace if needed
+            if (!parsedProjects.workspaceProjects['default'] && parsedProjects.projects.length > 0) {
+                console.log("Migrating legacy projects to default workspace");
+                parsedProjects.workspaceProjects['default'] = parsedProjects.projects;
             }
+        } else {
+            console.log("No saved projects data found");
         }
 
         return parsedProjects
@@ -69,7 +104,24 @@ const saveProjectsToStorage = (state) => {
             serviceTypeFilter: 'all',  // Reset service type filter
             priorityFilter: 'all'   // Reset priority filter
         }
+
+        // Ensure projects in each workspace have their workspaceId set correctly
+        if (stateToPersist.workspaceProjects) {
+            console.log("Saving workspaces to storage:", Object.keys(stateToPersist.workspaceProjects));
+
+            Object.keys(stateToPersist.workspaceProjects).forEach(workspaceId => {
+                if (Array.isArray(stateToPersist.workspaceProjects[workspaceId])) {
+                    console.log(`Saving workspace ${workspaceId} with ${stateToPersist.workspaceProjects[workspaceId].length} projects`);
+                    stateToPersist.workspaceProjects[workspaceId] = stateToPersist.workspaceProjects[workspaceId].map(project => ({
+                        ...project,
+                        workspaceId: project.workspaceId || workspaceId
+                    }));
+                }
+            });
+        }
+
         localStorage.setItem('invoiceAppProjects', JSON.stringify(stateToPersist))
+        console.log("Projects saved to localStorage successfully");
     } catch (error) {
         console.error('Error saving projects to localStorage:', error)
     }
@@ -83,6 +135,8 @@ const projectsSlice = createSlice({
             const projectNumber = `PRJ${Math.floor(Math.random() * 9000) + 1000}`
             const { project, workspaceId = 'default' } = action.payload;
 
+            console.log(`Adding new project to workspace: ${workspaceId}`);
+
             // Ensure serviceTypes is an array
             const serviceTypes = Array.isArray(project.serviceTypes)
                 ? project.serviceTypes
@@ -90,10 +144,11 @@ const projectsSlice = createSlice({
 
             // Initialize workspace if it doesn't exist
             if (!state.workspaceProjects[workspaceId]) {
+                console.log(`Creating new workspace entry for: ${workspaceId}`);
                 state.workspaceProjects[workspaceId] = [];
             }
 
-            // Create the new project object
+            // Create the new project object with explicit workspaceId
             const newProject = {
                 ...project,
                 id: projectNumber,
@@ -105,17 +160,31 @@ const projectsSlice = createSlice({
                 invoices: Array.isArray(project.invoices) ? project.invoices : [],
                 priority: project.priority || 'medium', // Default priority is medium
                 tasks: [], // Initialize tasks as empty array
-                workspaceId, // Associate with workspace
+                workspaceId, // Associate with workspace - this is crucial
             };
 
             // Add to workspace projects
             state.workspaceProjects[workspaceId].push(newProject);
 
-            // For backward compatibility
-            state.projects = state.workspaceProjects[workspaceId];
+            console.log(`Project ${projectNumber} added to workspace ${workspaceId}. Total projects: ${state.workspaceProjects[workspaceId].length}`);
 
-            console.log('Adding project with serviceTypes:', serviceTypes)
-            saveProjectsToStorage(state)
+            // Check current state.projects for workspace contamination
+            const activeWorkspaceId =
+                state.projects.length > 0 &&
+                    state.projects[0].workspaceId ?
+                    state.projects[0].workspaceId : workspaceId;
+
+            console.log(`Current active workspace in projects array: ${activeWorkspaceId}`);
+
+            // ONLY update the current projects list if this is the active workspace
+            if (workspaceId === activeWorkspaceId) {
+                console.log(`Updating active projects list for workspace: ${workspaceId}`);
+                state.projects = [...state.workspaceProjects[workspaceId]];
+            } else {
+                console.log(`Not updating active projects - different workspace (${activeWorkspaceId}) is active`);
+            }
+
+            saveProjectsToStorage(state);
         },
         updateProjectStatus: (state, action) => {
             const { id, status, workspaceId = 'default' } = action.payload;
@@ -261,14 +330,81 @@ const projectsSlice = createSlice({
         // Set active workspace projects (for when a user switches workspaces)
         setActiveWorkspaceProjects: (state, action) => {
             const workspaceId = action.payload || 'default';
+            console.log(`Switching to workspace projects: ${workspaceId}`);
 
             // Initialize workspace if it doesn't exist
             if (!state.workspaceProjects[workspaceId]) {
+                console.log(`Creating new workspace entry during switch: ${workspaceId}`);
                 state.workspaceProjects[workspaceId] = [];
             }
 
-            // Set the current projects to the selected workspace's projects
-            state.projects = state.workspaceProjects[workspaceId];
+            // Double check all projects in this workspace have the correct workspaceId
+            if (Array.isArray(state.workspaceProjects[workspaceId])) {
+                state.workspaceProjects[workspaceId] = state.workspaceProjects[workspaceId].map(project => ({
+                    ...project,
+                    workspaceId  // Ensure every project has the correct workspaceId
+                }));
+            }
+
+            // Get the projects for this workspace with a deep copy to prevent reference issues
+            const workspaceProjects = JSON.parse(JSON.stringify(state.workspaceProjects[workspaceId] || []));
+            console.log(`Found ${workspaceProjects.length} projects for workspace: ${workspaceId}`);
+
+            // Set the current projects to ONLY the selected workspace's projects
+            state.projects = workspaceProjects;
+
+            // Log every project in this workspace for debugging
+            if (workspaceProjects.length > 0) {
+                console.log("Projects in this workspace:");
+                workspaceProjects.forEach(project => {
+                    console.log(`- ${project.id}: ${project.name} (workspace: ${project.workspaceId})`);
+                });
+            }
+
+            console.log(`Active projects set to ${state.projects.length} projects from workspace: ${workspaceId}`);
+
+            // Save state to ensure persistence
+            saveProjectsToStorage(state);
+        },
+        // Add action to reinitialize the project store (for recovery or emergency)
+        reinitializeProjectStore: (state) => {
+            console.log("Reinitializing project store...");
+
+            // Ensure all projects in all workspaces have correct workspace IDs
+            Object.keys(state.workspaceProjects).forEach(workspaceId => {
+                if (Array.isArray(state.workspaceProjects[workspaceId])) {
+                    state.workspaceProjects[workspaceId] = state.workspaceProjects[workspaceId].map(project => ({
+                        ...project,
+                        workspaceId: workspaceId  // Force correct workspaceId
+                    }));
+                    console.log(`Fixed workspaceId for ${state.workspaceProjects[workspaceId].length} projects in workspace: ${workspaceId}`);
+                }
+            });
+
+            // Ensure current projects array matches the current workspace
+            const currentWorkspace = localStorage.getItem('invoiceAppWorkspaces');
+            let workspaceId = 'default';
+
+            try {
+                if (currentWorkspace) {
+                    const parsedWorkspace = JSON.parse(currentWorkspace);
+                    if (parsedWorkspace.currentWorkspace && parsedWorkspace.currentWorkspace.id) {
+                        workspaceId = parsedWorkspace.currentWorkspace.id;
+                    }
+                }
+            } catch (e) {
+                console.error("Error parsing current workspace:", e);
+            }
+
+            console.log(`Setting active projects to current workspace: ${workspaceId}`);
+            if (state.workspaceProjects[workspaceId]) {
+                state.projects = [...state.workspaceProjects[workspaceId]];
+            } else {
+                state.workspaceProjects[workspaceId] = [];
+                state.projects = [];
+            }
+
+            saveProjectsToStorage(state);
         }
     }
 })
@@ -286,7 +422,8 @@ export const {
     editProject,
     addInvoiceToProject,
     removeInvoiceFromProject,
-    setActiveWorkspaceProjects
+    setActiveWorkspaceProjects,
+    reinitializeProjectStore
 } = projectsSlice.actions
 
 export default projectsSlice.reducer 

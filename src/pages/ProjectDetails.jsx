@@ -82,7 +82,8 @@ const ProjectActionBar = ({ project, onEdit, onDelete }) => {
     const handleStatusChange = (newStatus) => {
         dispatch(updateProjectStatus({
             id: project.id,
-            status: newStatus
+            status: newStatus,
+            workspaceId: project.workspaceId || 'default'
         }));
         toast.success(`Project status updated to ${newStatus.replace('-', ' ')}`);
     };
@@ -98,7 +99,8 @@ const ProjectActionBar = ({ project, onEdit, onDelete }) => {
     const handlePriorityChange = (newPriority) => {
         dispatch(updateProjectPriority({
             id: project.id,
-            priority: newPriority
+            priority: newPriority,
+            workspaceId: project.workspaceId || 'default'
         }));
         toast.success(`Project priority updated to ${newPriority}`);
     };
@@ -134,33 +136,33 @@ const ProjectActionBar = ({ project, onEdit, onDelete }) => {
                 <div className="flex flex-wrap md:flex-nowrap gap-4 justify-between items-center">
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
-                        <span className="text-light-text-secondary dark:text-dark-text-secondary">Status:</span>
-                        <div className="relative group inline-block">
+                            <span className="text-light-text-secondary dark:text-dark-text-secondary">Status:</span>
+                            <div className="relative group inline-block">
                                 <div className="cursor-pointer">
                                     <StatusBadge status={project.status} />
                                 </div>
-                            <div className="absolute left-0 mt-2 w-40 bg-light-card dark:bg-dark-card rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                                {['active', 'completed', 'on-hold', 'canceled'].map(status => (
-                                    <button
-                                        key={status}
-                                        onClick={() => handleStatusChange(status)}
+                                <div className="absolute left-0 mt-2 w-40 bg-light-card dark:bg-dark-card rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                                    {['active', 'completed', 'on-hold', 'canceled'].map(status => (
+                                        <button
+                                            key={status}
+                                            onClick={() => handleStatusChange(status)}
                                             className={`w-full text-left px-4 py-2 text-xs hover:bg-light-bg dark:hover:bg-dark-bg transition-colors duration-200 flex items-center gap-2 ${status === project.status ? 'font-semibold' : ''}`}
-                                        style={{
-                                            color: status === 'active' ? '#33D69F' :
-                                                status === 'completed' ? '#6460FF' :
-                                                    status === 'on-hold' ? '#FF8F00' :
-                                                        status === 'canceled' ? '#EC5757' : 'inherit'
-                                        }}
-                                    >
+                                            style={{
+                                                color: status === 'active' ? '#33D69F' :
+                                                    status === 'completed' ? '#6460FF' :
+                                                        status === 'on-hold' ? '#FF8F00' :
+                                                            status === 'canceled' ? '#EC5757' : 'inherit'
+                                            }}
+                                        >
                                             <div className="w-1.5 h-1.5 rounded-full" style={{
                                                 backgroundColor: status === 'active' ? '#33D69F' :
                                                     status === 'completed' ? '#6460FF' :
                                                         status === 'on-hold' ? '#FF8F00' :
                                                             status === 'canceled' ? '#EC5757' : '#373B53'
                                             }}></div>
-                                        {status.replace('-', ' ')}
-                                    </button>
-                                ))}
+                                            {status.replace('-', ' ')}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -273,7 +275,11 @@ const ProjectDetails = () => {
             ]
         };
 
-        dispatch(editProject(updatedProject));
+        dispatch(editProject({
+            project: updatedProject,
+            workspaceId: project.workspaceId || 'default'
+        }));
+
         toast.success('Hours logged successfully');
         setHoursToLog(0);
         setLogDescription('');
@@ -309,7 +315,10 @@ const ProjectDetails = () => {
             tasks: updatedTasks
         };
 
-        dispatch(editProject(updatedProject));
+        dispatch(editProject({
+            project: updatedProject,
+            workspaceId: project.workspaceId || 'default'
+        }));
         toast.success('Tasks updated successfully');
     };
 
@@ -381,7 +390,10 @@ const ProjectDetails = () => {
                     project={project}
                     onEdit={() => setIsEditModalOpen(true)}
                     onDelete={() => {
-                        dispatch(deleteProject(project.id));
+                        dispatch(deleteProject({
+                            id: project.id,
+                            workspaceId: project.workspaceId || 'default'
+                        }));
                         toast.success('Project deleted');
                         navigate('/projects');
                     }}
@@ -430,66 +442,66 @@ const ProjectDetails = () => {
 
                 {/* Overview Tab Content */}
                 {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Project Overview Section */}
-                    <motion.div
-                        variants={slideUp}
-                        className="lg:col-span-2 bg-light-card dark:bg-dark-card rounded-lg shadow-sm p-6 transition-colors duration-200"
-                    >
-                        <h1 className="text-2xl font-bold text-light-text dark:text-dark-text mb-2">
-                            {project.name}
-                        </h1>
+                        <motion.div
+                            variants={slideUp}
+                            className="lg:col-span-2 bg-light-card dark:bg-dark-card rounded-lg shadow-sm p-6 transition-colors duration-200"
+                        >
+                            <h1 className="text-2xl font-bold text-light-text dark:text-dark-text mb-2">
+                                {project.name}
+                            </h1>
 
-                        <div className="flex items-center gap-2 text-light-text-secondary dark:text-dark-text-secondary text-sm mb-6">
-                            <BiCalendar size={16} />
-                            Created on {formattedDate}
-                        </div>
-
-                        <p className="text-light-text dark:text-dark-text mb-8">
-                            {project.description || 'No description provided'}
-                        </p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div>
-                                <h3 className="text-sm font-semibold text-light-text-secondary dark:text-dark-text-secondary mb-2">
-                                    Client
-                                </h3>
-                                <p className="text-light-text dark:text-dark-text">
-                                    {project.client || 'No client specified'}
-                                </p>
+                            <div className="flex items-center gap-2 text-light-text-secondary dark:text-dark-text-secondary text-sm mb-6">
+                                <BiCalendar size={16} />
+                                Created on {formattedDate}
                             </div>
 
-                            <div>
-                                <h3 className="text-sm font-semibold text-light-text-secondary dark:text-dark-text-secondary mb-2 flex items-center gap-1">
-                                    <BiTime size={16} />
+                            <p className="text-light-text dark:text-dark-text mb-8">
+                                {project.description || 'No description provided'}
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                                        Client
+                                    </h3>
+                                    <p className="text-light-text dark:text-dark-text">
+                                        {project.client || 'No client specified'}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm font-semibold text-light-text-secondary dark:text-dark-text-secondary mb-2 flex items-center gap-1">
+                                        <BiTime size={16} />
                                         Estimated Hours
-                                </h3>
-                                <p className="text-light-text dark:text-dark-text">
+                                    </h3>
+                                    <p className="text-light-text dark:text-dark-text">
                                         {hoursEstimated} hours
-                                </p>
-                            </div>
+                                    </p>
+                                </div>
 
                                 <div className="col-span-1 md:col-span-2">
-                                <h3 className="text-sm font-semibold text-light-text-secondary dark:text-dark-text-secondary mb-2">
-                                    Service Types
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {getServiceTypeNames().length > 0 ? (
+                                    <h3 className="text-sm font-semibold text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                                        Service Types
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {getServiceTypeNames().length > 0 ? (
                                             getServiceTypeNames().map(serviceType => (
                                                 <ServiceTypeLabel
                                                     key={serviceType.id}
                                                     id={serviceType.id}
                                                     name={serviceType.name}
                                                 />
-                                        ))
-                                    ) : (
-                                        <span className="text-light-text-secondary dark:text-dark-text-secondary">
-                                            No service types specified
-                                        </span>
-                                    )}
+                                            ))
+                                        ) : (
+                                            <span className="text-light-text-secondary dark:text-dark-text-secondary">
+                                                No service types specified
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
                             {/* Project Summary Cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
@@ -531,22 +543,22 @@ const ProjectDetails = () => {
 
                             {/* Time Logging Form */}
                             <div className="mb-6">
-                            <div className="flex justify-between items-center mb-4">
+                                <div className="flex justify-between items-center mb-4">
                                     <span className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
                                         {hoursLogged} of {hoursEstimated} hours logged ({Math.round(hoursProgressCapped)}% complete)
                                     </span>
-                                <button
-                                    onClick={() => setShowLogHoursForm(!showLogHoursForm)}
-                                    className="flex items-center gap-1 text-[#7C5DFA] hover:text-[#9277FF] text-sm transition-colors"
-                                >
-                                    {showLogHoursForm ? 'Cancel' : (
-                                        <>
-                                            <BiPlus />
-                                            Log Hours
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                                    <button
+                                        onClick={() => setShowLogHoursForm(!showLogHoursForm)}
+                                        className="flex items-center gap-1 text-[#7C5DFA] hover:text-[#9277FF] text-sm transition-colors"
+                                    >
+                                        {showLogHoursForm ? 'Cancel' : (
+                                            <>
+                                                <BiPlus />
+                                                Log Hours
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
 
                                 {/* Hours Progress Bar */}
                                 <div className="mb-4">
@@ -593,13 +605,13 @@ const ProjectDetails = () => {
                                                 Description
                                             </label>
                                             <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={logDescription}
-                                                onChange={(e) => setLogDescription(e.target.value)}
-                                                placeholder="What did you work on?"
+                                                <input
+                                                    type="text"
+                                                    value={logDescription}
+                                                    onChange={(e) => setLogDescription(e.target.value)}
+                                                    placeholder="What did you work on?"
                                                     className="w-full p-2 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text focus:outline-none focus:ring-1 focus:ring-[#7C5DFA] focus:border-transparent transition-colors duration-200"
-                                            />
+                                                />
                                                 <button
                                                     onClick={handleLogHours}
                                                     className="px-3 py-2 bg-[#7C5DFA] text-white rounded-md text-sm hover:bg-[#9277FF] transition-colors duration-200 whitespace-nowrap"
@@ -629,13 +641,13 @@ const ProjectDetails = () => {
                                                 </div>
                                                 <div className="font-medium text-sm text-light-text dark:text-dark-text mr-2 w-16 flex-shrink-0">
                                                     {log.hours} {log.hours === 1 ? 'hr' : 'hrs'}
-                            </div>
+                                                </div>
                                                 <div className="text-xs text-light-text-secondary dark:text-dark-text-secondary flex-grow truncate mr-2">
                                                     {log.description || 'No description'}
-                            </div>
+                                                </div>
                                                 <div className="text-xs text-light-text-secondary dark:text-dark-text-secondary flex-shrink-0 ml-auto">
                                                     {format(new Date(log.date), 'dd MMM')}
-                        </div>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -653,8 +665,8 @@ const ProjectDetails = () => {
                                 </div>
                             )}
                         </motion.div>
-                            </div>
-                        )}
+                    </div>
+                )}
 
                 {/* Tasks Tab Content */}
                 {activeTab === 'tasks' && (
@@ -672,74 +684,74 @@ const ProjectDetails = () => {
 
                 {/* Invoices Tab Content */}
                 {activeTab === 'invoices' && (
-                <motion.div
-                    variants={slideUp}
+                    <motion.div
+                        variants={slideUp}
                         initial="hidden"
                         animate="visible"
                         className="bg-light-card dark:bg-dark-card rounded-lg shadow-sm p-6 transition-colors duration-200"
-                >
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-semibold text-light-text dark:text-dark-text">
-                            Project Invoices
-                        </h3>
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-semibold text-light-text dark:text-dark-text">
+                                Project Invoices
+                            </h3>
                             <button
                                 onClick={handleCreateInvoice}
-                            className="px-4 py-2 bg-[#7C5DFA] text-white rounded-full text-sm hover:bg-[#9277FF] transition-colors duration-200"
-                        >
-                            + New Invoice
+                                className="px-4 py-2 bg-[#7C5DFA] text-white rounded-full text-sm hover:bg-[#9277FF] transition-colors duration-200"
+                            >
+                                + New Invoice
                             </button>
-                    </div>
+                        </div>
 
-                    {projectInvoices.length === 0 ? (
-                        <div className="text-center py-8 text-light-text-secondary dark:text-dark-text-secondary">
-                            No invoices linked to this project yet
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="text-left text-light-text-secondary dark:text-dark-text-secondary border-b border-light-border dark:border-dark-border">
-                                        <th className="pb-4 font-medium">Invoice</th>
-                                        <th className="pb-4 font-medium">Date</th>
-                                        <th className="pb-4 font-medium">Client</th>
-                                        <th className="pb-4 font-medium">Amount</th>
-                                        <th className="pb-4 font-medium">Status</th>
-                                        <th className="pb-4 font-medium"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {projectInvoices.map(invoice => (
-                                        <tr key={invoice.id} className="border-b border-light-border dark:border-dark-border">
-                                            <td className="py-4 font-medium text-light-text dark:text-dark-text">
-                                                {invoice.id}
-                                            </td>
-                                            <td className="py-4 text-light-text-secondary dark:text-dark-text-secondary">
-                                                {invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMM yyyy') : 'No date'}
-                                            </td>
-                                            <td className="py-4 text-light-text dark:text-dark-text">
-                                                {invoice.clientName || 'No client'}
-                                            </td>
-                                            <td className="py-4 text-light-text dark:text-dark-text font-medium">
-                                                {symbol} {invoice.total?.toFixed(2) || '0.00'}
-                                            </td>
-                                            <td className="py-4">
-                                                    <StatusBadge status={invoice.status} />
-                                            </td>
-                                            <td className="py-4 text-right">
-                                                <Link
-                                                    to={`/invoice/${invoice.id}`}
-                                                    className="text-[#7C5DFA] hover:text-[#9277FF] transition-colors duration-200"
-                                                >
-                                                    View
-                                                </Link>
-                                            </td>
+                        {projectInvoices.length === 0 ? (
+                            <div className="text-center py-8 text-light-text-secondary dark:text-dark-text-secondary">
+                                No invoices linked to this project yet
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="text-left text-light-text-secondary dark:text-dark-text-secondary border-b border-light-border dark:border-dark-border">
+                                            <th className="pb-4 font-medium">Invoice</th>
+                                            <th className="pb-4 font-medium">Date</th>
+                                            <th className="pb-4 font-medium">Client</th>
+                                            <th className="pb-4 font-medium">Amount</th>
+                                            <th className="pb-4 font-medium">Status</th>
+                                            <th className="pb-4 font-medium"></th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </motion.div>
+                                    </thead>
+                                    <tbody>
+                                        {projectInvoices.map(invoice => (
+                                            <tr key={invoice.id} className="border-b border-light-border dark:border-dark-border">
+                                                <td className="py-4 font-medium text-light-text dark:text-dark-text">
+                                                    {invoice.id}
+                                                </td>
+                                                <td className="py-4 text-light-text-secondary dark:text-dark-text-secondary">
+                                                    {invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMM yyyy') : 'No date'}
+                                                </td>
+                                                <td className="py-4 text-light-text dark:text-dark-text">
+                                                    {invoice.clientName || 'No client'}
+                                                </td>
+                                                <td className="py-4 text-light-text dark:text-dark-text font-medium">
+                                                    {symbol} {invoice.total?.toFixed(2) || '0.00'}
+                                                </td>
+                                                <td className="py-4">
+                                                    <StatusBadge status={invoice.status} />
+                                                </td>
+                                                <td className="py-4 text-right">
+                                                    <Link
+                                                        to={`/invoice/${invoice.id}`}
+                                                        className="text-[#7C5DFA] hover:text-[#9277FF] transition-colors duration-200"
+                                                    >
+                                                        View
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </motion.div>
                 )}
             </motion.div>
 

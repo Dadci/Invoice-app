@@ -10,6 +10,7 @@ const AddProjectModal = ({ isOpen, onClose, editingProject = null }) => {
     const dispatch = useDispatch();
     const invoices = useSelector(state => state.invoices.invoices);
     const serviceTypes = useSelector(state => state.settings?.serviceTypes || DEFAULT_SERVICE_TYPES);
+    const currentWorkspace = useSelector(state => state.workspaces.currentWorkspace);
 
     const [showCustomServiceModal, setShowCustomServiceModal] = useState(false);
     const [newServiceType, setNewServiceType] = useState({ id: '', name: '' });
@@ -191,14 +192,29 @@ const AddProjectModal = ({ isOpen, onClose, editingProject = null }) => {
         }
 
         try {
+            // Get the current workspace ID
+            const workspaceId = currentWorkspace?.id || 'default';
+
+            console.log(`Adding/editing project in workspace: ${workspaceId}`);
+
             if (editingProject) {
                 dispatch(editProject({
-                    ...formData,
-                    id: editingProject.id
+                    project: {
+                        ...formData,
+                        id: editingProject.id,
+                        workspaceId: workspaceId // Explicitly set workspace ID
+                    },
+                    workspaceId: workspaceId
                 }));
                 toast.success('Project updated successfully');
             } else {
-                dispatch(addProject(formData));
+                dispatch(addProject({
+                    project: {
+                        ...formData,
+                        workspaceId: workspaceId // Explicitly set workspace ID
+                    },
+                    workspaceId: workspaceId
+                }));
                 toast.success('Project created successfully');
             }
             onClose();
