@@ -1,16 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PDFViewer } from '@react-pdf/renderer';
 import InvoicePDF from '../utils/InvoicePDF';
 import { FiX, FiDownload } from 'react-icons/fi';
 import { useSelector } from 'react-redux';
 import { DEFAULT_SERVICE_TYPES } from '../utils/constants';
 
-const InvoicePreview = ({ invoice, businessInfo, paymentDetails, currency, onClose }) => {
+const InvoicePreview = ({ invoice, businessInfo, paymentDetails, currency, onClose, serviceTypes, language }) => {
     const [renderError, setRenderError] = useState(false);
-    const serviceTypes = useSelector(state => state.settings?.serviceTypes || DEFAULT_SERVICE_TYPES);
+    const storeServiceTypes = useSelector(state => state.settings?.serviceTypes || DEFAULT_SERVICE_TYPES);
+    const storeLanguage = useSelector(state => state.settings?.language || 'en');
+
+    // Use provided serviceTypes or fallback to store value
+    const finalServiceTypes = serviceTypes || storeServiceTypes;
+    // Use provided language or fallback to store value
+    const finalLanguage = language || storeLanguage;
+
+    // Prevent background scrolling when modal is open
+    useEffect(() => {
+        // Save the current overflow value
+        const originalStyle = window.getComputedStyle(document.body).overflow;
+        // Prevent scrolling on the body
+        document.body.style.overflow = 'hidden';
+
+        // Cleanup function to restore original overflow when component unmounts
+        return () => {
+            document.body.style.overflow = originalStyle;
+        };
+    }, []);
+
+    // Handle backdrop click to close modal
+    const handleBackdropClick = (e) => {
+        // Close only if clicking on the backdrop itself, not its children
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+            onClick={handleBackdropClick}
+        >
             <div className="bg-white dark:bg-dark-card rounded-lg overflow-hidden shadow-xl max-w-6xl w-full h-[90vh] flex flex-col">
                 <div className="bg-light-bg dark:bg-dark-bg p-4 flex justify-between items-center border-b border-light-border dark:border-dark-border">
                     <div className="flex items-center">
@@ -44,7 +74,7 @@ const InvoicePreview = ({ invoice, businessInfo, paymentDetails, currency, onClo
                             </button>
                         </div>
                     ) : (
-                        <div className="w-full h-full bg-white dark:bg-dark-bg rounded-lg overflow-hidden shadow-md">
+                        <div className="w-full h-full rounded-lg overflow-hidden shadow-md">
                             {(() => {
                                 try {
                                     // Function to create PDFViewer with content
@@ -53,7 +83,8 @@ const InvoicePreview = ({ invoice, businessInfo, paymentDetails, currency, onClo
                                         businessInfo: businessInfo,
                                         paymentDetails: paymentDetails,
                                         currency: currency,
-                                        serviceTypes: serviceTypes
+                                        serviceTypes: finalServiceTypes,
+                                        language: finalLanguage
                                     };
 
                                     const pdfDocument = InvoicePDF(props);
@@ -62,8 +93,9 @@ const InvoicePreview = ({ invoice, businessInfo, paymentDetails, currency, onClo
                                         <PDFViewer
                                             width="100%"
                                             height="100%"
-                                            className="border-0"
+                                            className="border-0 overflow-hidden"
                                             onError={() => setRenderError(true)}
+                                            showToolbar={false}
                                         >
                                             {pdfDocument}
                                         </PDFViewer>

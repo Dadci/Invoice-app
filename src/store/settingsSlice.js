@@ -1,5 +1,44 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { DEFAULT_SERVICE_TYPES } from '../utils/constants'
+import { DEFAULT_SERVICE_TYPES, AVAILABLE_CURRENCIES, DEFAULT_CURRENCY } from '../utils/constants'
+
+// Helper to save state to localStorage
+const saveSettingsToStorage = (state) => {
+    try {
+        localStorage.setItem('invoiceAppSettings', JSON.stringify(state))
+    } catch (error) {
+        console.error('Error saving settings to localStorage:', error)
+    }
+}
+
+// Default settings for a new workspace
+const defaultWorkspaceSettings = {
+    businessInfo: {
+        name: '',
+        email: '',
+        phone: '',
+        address: {
+            street: '',
+            city: '',
+            postCode: '',
+            country: ''
+        },
+        taxId: ''
+    },
+    paymentDetails: {
+        bankName: '',
+        iban: '',
+        swiftBic: ''
+    },
+    currency: DEFAULT_CURRENCY,
+    serviceTypes: DEFAULT_SERVICE_TYPES,
+    invoiceAutomation: {
+        enabled: false,
+        generateMonthEndInvoices: false,
+        defaultHourlyRate: 13,
+        defaultPaymentTerms: 30
+    },
+    language: 'en' // Default language is English
+}
 
 // Load settings from localStorage if available
 const loadSettingsFromStorage = () => {
@@ -33,37 +72,6 @@ const loadSettingsFromStorage = () => {
 const savedSettings = loadSettingsFromStorage()
 
 // Default settings for a new workspace
-const defaultWorkspaceSettings = {
-    businessInfo: {
-        name: '',
-        email: '',
-        phone: '',
-        address: {
-            street: '',
-            city: '',
-            postCode: '',
-            country: ''
-        },
-        taxId: ''
-    },
-    paymentDetails: {
-        bankName: '',
-        iban: '',
-        swiftBic: ''
-    },
-    currency: {
-        code: 'GBP',
-        symbol: '£'
-    },
-    serviceTypes: DEFAULT_SERVICE_TYPES,
-    invoiceAutomation: {
-        enabled: false,
-        generateMonthEndInvoices: false,
-        defaultHourlyRate: 50,
-        defaultPaymentTerms: 30
-    }
-}
-
 const defaultInitialState = {
     // Legacy fields for backward compatibility
     businessInfo: {
@@ -83,42 +91,31 @@ const defaultInitialState = {
         iban: '',
         swiftBic: ''
     },
-    currency: {
-        code: 'GBP',
-        symbol: '£'
-    },
+    currency: DEFAULT_CURRENCY,
     serviceTypes: DEFAULT_SERVICE_TYPES,
     invoiceAutomation: {
         enabled: false,
         generateMonthEndInvoices: false,
-        defaultHourlyRate: 50,
+        defaultHourlyRate: 13,
         defaultPaymentTerms: 30
     },
+    language: 'en', // Default language is English
     // New workspace-specific settings
     workspaceSettings: {
         'default': { ...defaultWorkspaceSettings }
     },
     // Available currencies are shared across all workspaces
-    availableCurrencies: [
-        { code: 'GBP', symbol: '£', name: 'British Pound' },
-        { code: 'USD', symbol: '$', name: 'US Dollar' },
-        { code: 'EUR', symbol: '€', name: 'Euro' },
-        { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-        { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-        { code: 'JPY', symbol: '¥', name: 'Japanese Yen' }
-    ]
+    availableCurrencies: AVAILABLE_CURRENCIES
 }
 
 // Use saved settings or default if none exist
 const initialState = savedSettings || defaultInitialState
 
-// Helper to save state to localStorage
-const saveSettingsToStorage = (state) => {
-    try {
-        localStorage.setItem('invoiceAppSettings', JSON.stringify(state))
-    } catch (error) {
-        console.error('Error saving settings to localStorage:', error)
-    }
+// If we do have saved settings, ensure the availableCurrencies array is updated
+if (savedSettings) {
+    savedSettings.availableCurrencies = AVAILABLE_CURRENCIES;
+    // Save back to localStorage
+    saveSettingsToStorage(savedSettings);
 }
 
 const settingsSlice = createSlice({
@@ -295,6 +292,24 @@ const settingsSlice = createSlice({
             state.currency = state.workspaceSettings[workspaceId].currency;
             state.serviceTypes = state.workspaceSettings[workspaceId].serviceTypes;
             state.invoiceAutomation = state.workspaceSettings[workspaceId].invoiceAutomation;
+        },
+        changeLanguage: (state, action) => {
+            const { language, workspaceId = 'default' } = action.payload;
+
+            // Initialize workspace settings if needed
+            if (!state.workspaceSettings[workspaceId]) {
+                state.workspaceSettings[workspaceId] = { ...defaultWorkspaceSettings };
+            }
+
+            // Update workspace-specific settings
+            state.workspaceSettings[workspaceId].language = language;
+
+            // For backward compatibility
+            if (workspaceId === 'default') {
+                state.language = language;
+            }
+
+            saveSettingsToStorage(state);
         }
     }
 })
@@ -307,6 +322,7 @@ export const {
     addServiceType,
     removeServiceType,
     updateInvoiceAutomation,
-    setActiveWorkspaceSettings
+    setActiveWorkspaceSettings,
+    changeLanguage
 } = settingsSlice.actions
 export default settingsSlice.reducer 

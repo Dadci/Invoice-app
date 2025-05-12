@@ -10,6 +10,7 @@ import {
     PDFDownloadLink,
     Font
 } from '@react-pdf/renderer';
+import { invoiceTranslations } from './translations';
 
 // Register professional fonts
 Font.register({
@@ -347,7 +348,7 @@ const renderTableRows = (items, currency, serviceTypes = []) => {
 };
 
 // Create function to render payment information
-const renderPaymentInfo = (paymentDetails, invoiceId) => {
+const renderPaymentInfo = (paymentDetails, invoiceId, t) => {
     if (!paymentDetails?.bankName && !paymentDetails?.iban && !paymentDetails?.swiftBic) {
         return null;
     }
@@ -359,7 +360,7 @@ const renderPaymentInfo = (paymentDetails, invoiceId) => {
             React.createElement(
                 View,
                 { key: 'bank', style: styles.paymentRow },
-                React.createElement(Text, { style: styles.paymentLabel }, 'Bank Name:'),
+                React.createElement(Text, { style: styles.paymentLabel }, t.bankName),
                 React.createElement(Text, { style: styles.paymentValue }, paymentDetails.bankName)
             )
         );
@@ -370,7 +371,7 @@ const renderPaymentInfo = (paymentDetails, invoiceId) => {
             React.createElement(
                 View,
                 { key: 'iban', style: styles.paymentRow },
-                React.createElement(Text, { style: styles.paymentLabel }, 'IBAN:'),
+                React.createElement(Text, { style: styles.paymentLabel }, t.iban),
                 React.createElement(Text, { style: styles.paymentValue }, paymentDetails.iban)
             )
         );
@@ -381,18 +382,16 @@ const renderPaymentInfo = (paymentDetails, invoiceId) => {
             React.createElement(
                 View,
                 { key: 'swift', style: styles.paymentRow },
-                React.createElement(Text, { style: styles.paymentLabel }, 'SWIFT/BIC:'),
+                React.createElement(Text, { style: styles.paymentLabel }, t.swiftBic),
                 React.createElement(Text, { style: styles.paymentValue }, paymentDetails.swiftBic)
             )
         );
     }
 
-
-
     return React.createElement(
         View,
         { style: styles.paymentInfo },
-        React.createElement(Text, { style: styles.paymentInfoTitle }, 'PAYMENT INFORMATION'),
+        React.createElement(Text, { style: styles.paymentInfoTitle }, t.paymentInformation),
         ...rows
     );
 };
@@ -416,7 +415,10 @@ const renderStatusBadge = (status) => {
 
 // Invoice document component without JSX
 const InvoicePDF = (props) => {
-    const { invoice, businessInfo, paymentDetails, currency, serviceTypes = [] } = props;
+    const { invoice, businessInfo, paymentDetails, currency, serviceTypes = [], language = 'en' } = props;
+
+    // Get translations based on selected language
+    const t = invoiceTranslations[language] || invoiceTranslations.en;
 
     return React.createElement(
         Document,
@@ -431,7 +433,7 @@ const InvoicePDF = (props) => {
                 React.createElement(
                     View,
                     {},
-                    React.createElement(Text, { style: styles.invoiceTitle }, 'INVOICE'),
+                    React.createElement(Text, { style: styles.invoiceTitle }, t.invoice),
                     React.createElement(Text, { style: styles.invoiceSubtitle }, `#${invoice.id}`)
                 ),
                 React.createElement(
@@ -452,7 +454,7 @@ const InvoicePDF = (props) => {
                 React.createElement(
                     View,
                     { style: styles.col },
-                    React.createElement(Text, { style: styles.label }, 'BILL TO'),
+                    React.createElement(Text, { style: styles.label }, t.billTo),
                     React.createElement(Text, { style: styles.clientName }, invoice.clientName),
                     ...renderClientAddress(invoice.clientAddress),
                     React.createElement(Text, { style: { ...styles.value, marginTop: 5 } }, invoice.clientEmail || '')
@@ -463,12 +465,12 @@ const InvoicePDF = (props) => {
                     React.createElement(
                         View,
                         { style: { alignItems: 'flex-end' } },
-                        React.createElement(Text, { style: styles.label }, 'INVOICE DETAILS'),
+                        React.createElement(Text, { style: styles.label }, t.invoiceDetails),
 
                         React.createElement(
                             View,
                             { style: { ...styles.row, marginTop: 5 } },
-                            React.createElement(Text, { style: { ...styles.value, textAlign: 'right', color: '#64748B', width: 100 } }, 'Issue Date:'),
+                            React.createElement(Text, { style: { ...styles.value, textAlign: 'right', color: '#64748B', width: 100 } }, t.issueDate),
                             React.createElement(Text, { style: { ...styles.value, textAlign: 'right', fontWeight: 'medium', marginLeft: 8 } }, format(new Date(invoice.createdAt), 'dd MMM yyyy'))
                         ),
 
@@ -476,14 +478,14 @@ const InvoicePDF = (props) => {
                             React.createElement(
                                 View,
                                 { style: styles.row },
-                                React.createElement(Text, { style: { ...styles.value, textAlign: 'right', color: '#64748B', width: 100 } }, 'Due Date:'),
+                                React.createElement(Text, { style: { ...styles.value, textAlign: 'right', color: '#64748B', width: 100 } }, t.dueDate),
                                 React.createElement(Text, { style: { ...styles.value, textAlign: 'right', fontWeight: 'medium', marginLeft: 8 } }, format(new Date(invoice.paymentDue), 'dd MMM yyyy'))
                             ) : null,
 
                         React.createElement(
                             View,
                             { style: styles.row },
-                            React.createElement(Text, { style: { ...styles.value, textAlign: 'right', color: '#64748B', width: 100 } }, 'Project:'),
+                            React.createElement(Text, { style: { ...styles.value, textAlign: 'right', color: '#64748B', width: 100 } }, t.project),
                             React.createElement(Text, { style: { ...styles.value, textAlign: 'right', fontWeight: 'medium', marginLeft: 8 } }, invoice.projectDescription || 'N/A')
                         )
                     )
@@ -497,10 +499,10 @@ const InvoicePDF = (props) => {
                 React.createElement(
                     View,
                     { style: styles.tableHeader },
-                    React.createElement(Text, { style: styles.tableCol1 }, 'ITEM DESCRIPTION'),
-                    React.createElement(Text, { style: styles.tableCol2 }, 'HOURS'),
-                    React.createElement(Text, { style: styles.tableCol3 }, 'RATE'),
-                    React.createElement(Text, { style: styles.tableCol4 }, 'AMOUNT')
+                    React.createElement(Text, { style: styles.tableCol1 }, t.itemDescription),
+                    React.createElement(Text, { style: styles.tableCol2 }, t.hours),
+                    React.createElement(Text, { style: styles.tableCol3 }, t.rate),
+                    React.createElement(Text, { style: styles.tableCol4 }, t.amount)
                 ),
 
                 ...renderTableRows(invoice.items, currency, serviceTypes),
@@ -511,7 +513,7 @@ const InvoicePDF = (props) => {
                     React.createElement(
                         View,
                         { style: styles.total },
-                        React.createElement(Text, { style: styles.totalLabel }, 'SUBTOTAL'),
+                        React.createElement(Text, { style: styles.totalLabel }, t.subtotal),
                         React.createElement(Text, { style: styles.totalValue }, `${currency.symbol}${parseFloat(invoice.total || 0).toFixed(2)}`)
                     )
                 ),
@@ -522,19 +524,17 @@ const InvoicePDF = (props) => {
                     React.createElement(
                         View,
                         { style: styles.invoiceTotal },
-                        React.createElement(Text, { style: styles.invoiceTotalLabel }, 'TOTAL DUE'),
+                        React.createElement(Text, { style: styles.invoiceTotalLabel }, t.totalDue),
                         React.createElement(Text, { style: styles.invoiceTotalValue }, `${currency.symbol}${parseFloat(invoice.total || 0).toFixed(2)}`)
                     )
                 )
             ),
 
             // Payment Information
-            renderPaymentInfo(paymentDetails, invoice.id),
+            renderPaymentInfo(paymentDetails, invoice.id, t),
 
             // Thank You Note
-            React.createElement(Text, { style: styles.thankYou }, 'Thank you for your business!'),
-
-
+            React.createElement(Text, { style: styles.thankYou }, t.thankYou),
         )
     );
 };

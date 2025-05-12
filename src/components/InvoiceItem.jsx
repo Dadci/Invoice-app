@@ -9,6 +9,7 @@ import { toggleModal } from "../store/modalSlice";
 import toast from 'react-hot-toast';
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import EmailInvoiceModal from "./EmailInvoiceModal";
+import CurrencyDisplay from "./CurrencyDisplay";
 
 const InvoiceItem = ({ invoice, isBulkMode = false, isSelected = false, onToggleSelect }) => {
     const navigate = useNavigate();
@@ -130,7 +131,14 @@ const InvoiceItem = ({ invoice, isBulkMode = false, isSelected = false, onToggle
                         <p className="text-[14px] text-light-text-secondary dark:text-dark-text-secondary truncate transition-colors duration-200">{invoice.clientName || 'No Client'}</p>
                     </div>
 
-                    <h1 className="text-[15px] font-bold text-light-text dark:text-dark-text transition-colors duration-200 flex-shrink-0 min-w-[70px]">{symbol} {(invoice.total || 0).toFixed(2)}</h1>
+                    <h1 className="text-[15px] font-bold text-light-text dark:text-dark-text transition-colors duration-200 flex-shrink-0 min-w-[70px]">
+                        <CurrencyDisplay
+                            amount={invoice.total || 0}
+                            baseCurrency={invoice.currency?.code || "CAD"}
+                            size="md"
+                            className="font-bold"
+                        />
+                    </h1>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <StatusBadge status={invoice.status} size="small" />
@@ -200,7 +208,12 @@ const InvoiceItem = ({ invoice, isBulkMode = false, isSelected = false, onToggle
                                 {formatDueDate()}
                             </p>
                             <h1 className="text-[15px] font-bold text-light-text dark:text-dark-text transition-colors duration-200">
-                                {symbol} {(invoice.total || 0).toFixed(2)}
+                                <CurrencyDisplay
+                                    amount={invoice.total || 0}
+                                    baseCurrency={invoice.currency?.code || "CAD"}
+                                    size="md"
+                                    className="font-bold"
+                                />
                             </h1>
                         </div>
                         <div className="flex flex-col items-end gap-2">

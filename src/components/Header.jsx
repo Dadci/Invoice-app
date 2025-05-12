@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { fadeIn } from '../utils/animations';
 import NotificationIcon from "./NotificationIcon";
 import GenerateInvoiceButton from './GenerateInvoiceButton';
+import CurrencySelector from './CurrencySelector';
 
 const Header = () => {
     const dispatch = useDispatch();
@@ -85,6 +86,11 @@ const Header = () => {
 
                     {/* Notification Icon */}
                     <NotificationIcon />
+
+                    {/* Currency Selector */}
+                    <div className="block">
+                        <CurrencySelector showLabel={false} compact={true} />
+                    </div>
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}

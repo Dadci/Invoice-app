@@ -7,10 +7,12 @@ import toast from 'react-hot-toast'
 import { addServiceType } from '../store/settingsSlice'
 import { DEFAULT_SERVICE_TYPES } from '../utils/constants'
 import { addInvoiceToProject } from '../store/projectsSlice'
+import CurrencyDisplay from './CurrencyDisplay'
+import useCurrencyConverter from '../utils/useCurrencyConverter'
 
 const AddInvoiceModal = () => {
     const { isOpen, editingInvoice, projectToInvoice } = useSelector(state => state.modal)
-    const { symbol = '£' } = useSelector(state => state.settings?.currency || { symbol: '£' });
+    const { symbol = '$', code = 'CAD' } = useSelector(state => state.settings?.currency || { symbol: '$', code: 'CAD' });
     const { businessInfo = {}, paymentDetails = {} } = useSelector(state => state.settings || {});
     const { currentWorkspace } = useSelector(state => state.workspaces);
     // Add default empty array fallback for serviceTypes
@@ -102,7 +104,7 @@ const AddInvoiceModal = () => {
 
                 // If the project has hours logged, automatically add them as an item
                 if (project.hoursLogged > 0) {
-                    const hourlyRate = 50; // Default hourly rate
+                    const hourlyRate = 13; // Default hourly rate in CAD
                     newFormData.items = [
                         {
                             serviceType: 'other',
@@ -378,7 +380,9 @@ const AddInvoiceModal = () => {
 
         // Calculate hourly rate based on the total if hours are logged
         const hourlyRate = selectedProject.hoursLogged ?
-            (selectedProject.hoursEstimated ? Math.round(calculateTotal() / selectedProject.hoursEstimated) : 0) : 0;
+            // Use the hourly rate from invoice automation settings or default to 13 CAD
+            settings?.invoiceAutomation?.defaultHourlyRate || 13 :
+            null;
 
         if (existingHoursIndex >= 0) {
             // Update existing item
@@ -405,8 +409,8 @@ const AddInvoiceModal = () => {
                         serviceType: 'other',
                         name: `${selectedProject.name} - Consulting Hours`,
                         quantity: selectedProject.hoursLogged || selectedProject.hoursEstimated || 1,
-                        price: hourlyRate || 50, // Default hourly rate
-                        total: (selectedProject.hoursLogged || selectedProject.hoursEstimated || 1) * (hourlyRate || 50)
+                        price: hourlyRate || 13, // Default hourly rate in CAD
+                        total: (selectedProject.hoursLogged || selectedProject.hoursEstimated || 1) * (hourlyRate || 13)
                     }
                 ]
             });

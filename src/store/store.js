@@ -6,6 +6,7 @@ import themeReducer from './themeSlice'
 import projectsReducer from './projectsSlice'
 import notificationsReducer from './notificationsSlice'
 import workspacesReducer from './workspacesSlice'
+import subscriptionReducer from './subscriptionSlice'
 
 export const store = configureStore({
     reducer: {
@@ -15,7 +16,8 @@ export const store = configureStore({
         theme: themeReducer,
         projects: projectsReducer,
         notifications: notificationsReducer,
-        workspaces: workspacesReducer
+        workspaces: workspacesReducer,
+        subscription: subscriptionReducer
     }
 })
 

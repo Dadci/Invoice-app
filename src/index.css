@@ -27,4 +27,18 @@ body {
   font-family: 'League Spartan', sans-serif;
   scroll-behavior: smooth;
   overscroll-behavior-y: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+
+
+
+  
+
+
+

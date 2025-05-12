@@ -30,4 +30,30 @@ export const SERVICE_TYPE_COLORS = {
 // Get a consistent color for a service type
 export const getServiceTypeColor = (serviceTypeId) => {
     return SERVICE_TYPE_COLORS[serviceTypeId] || '#7C5DFA';
+};
+
+// Currency Constants
+export const AVAILABLE_CURRENCIES = [
+    { code: 'CAD', symbol: '$', name: 'Canadian Dollar' },
+    { code: 'USD', symbol: '$', name: 'US Dollar' },
+    { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'DZD', symbol: 'د.ج', name: 'Algerian Dinar' }
+];
+
+export const DEFAULT_CURRENCY = { code: 'CAD', symbol: '$' };
+
+// Currency Flag Mappings
+export const CURRENCY_FLAGS = {
+    CAD: '🇨🇦',
+    USD: '🇺🇸',
+    EUR: '🇪🇺',
+    DZD: '🇩🇿'
+};
+
+// Exchange rates relative to DZD
+export const CURRENCY_EXCHANGE_RATES = {
+    DZD: 1.0,      // Base currency
+    EUR: 1 / 260,    // 1 DZD = 1/260 EUR (or 1 EUR = 260 DZD)
+    USD: 1 / 234,    // 1 DZD = 1/234 USD (or 1 USD = 234 DZD)
+    CAD: 1 / 162     // 1 DZD = 1/162 CAD (or 1 CAD = 162 DZD)
 }; 

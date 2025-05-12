@@ -13,6 +13,8 @@ import InvoicePreview from '../components/InvoicePreview';
 import { useState } from "react";
 import { testPdfGeneration } from "../utils/testPdf.jsx";
 import { DEFAULT_SERVICE_TYPES } from '../utils/constants';
+import CurrencyDisplay from "../components/CurrencyDisplay";
+import useCurrencyConverter from "../utils/useCurrencyConverter";
 
 const InvoiceDetails = () => {
   const navigate = useNavigate();
@@ -21,11 +23,13 @@ const InvoiceDetails = () => {
     state.invoices.invoices.find(invoice => invoice.id === id)
   );
   const settings = useSelector(state => state.settings || {});
-  const { symbol = '£', code = 'GBP' } = settings.currency || {};
+  const { symbol = '$', code = 'CAD' } = settings.currency || {};
   const businessInfo = settings.businessInfo || {};
   const paymentDetails = settings.paymentDetails || {};
   const serviceTypes = useSelector(state => state.settings?.serviceTypes || DEFAULT_SERVICE_TYPES);
+  const language = useSelector(state => state.settings?.language || 'en');
   const [showPreview, setShowPreview] = useState(false);
+  const { convertAndFormat, formatCurrency } = useCurrencyConverter();
 
   if (!invoice) {
     return (
@@ -47,7 +51,7 @@ const InvoiceDetails = () => {
   const handleExportPDF = async () => {
     try {
       toast.loading('Generating PDF...');
-      await generateInvoicePDF(invoice, businessInfo, paymentDetails, { symbol, code }, serviceTypes);
+      await generateInvoicePDF(invoice, businessInfo, paymentDetails, { symbol, code }, serviceTypes, language);
       toast.dismiss();
       toast.success('Invoice exported to PDF successfully');
     } catch (error) {
@@ -206,8 +210,21 @@ const InvoiceDetails = () => {
                           )}
                         </td>
                         <td className="text-center text-light-text-secondary dark:text-dark-text-secondary py-3">{item.quantity}</td>
-                        <td className="text-right text-light-text-secondary dark:text-dark-text-secondary py-3">{symbol} {safePrice.toFixed(2)}</td>
-                        <td className="text-right font-bold py-3">{symbol} {safeTotal.toFixed(2)}</td>
+                        <td className="text-right text-light-text-secondary dark:text-dark-text-secondary py-3">
+                          <CurrencyDisplay
+                            amount={safePrice}
+                            baseCurrency={invoice.currency?.code || "CAD"}
+                            size="sm"
+                          />
+                        </td>
+                        <td className="text-right font-bold py-3">
+                          <CurrencyDisplay
+                            amount={safeTotal}
+                            baseCurrency={invoice.currency?.code || "CAD"}
+                            size="sm"
+                            className="font-bold"
+                          />
+                        </td>
                       </tr>
                     );
                   })}
@@ -218,9 +235,13 @@ const InvoiceDetails = () => {
             <div className="flex flex-row justify-between items-center w-full px-6 md:px-8 py-6 bg-[#373B53] dark:bg-[#0C0E16] rounded-b-lg transition-colors duration-200">
               <p className="text-[15px] text-white font-normal">Amount Due</p>
               <p className="text-[20px] text-white font-bold">
-                {symbol} {typeof invoice.total === 'number'
-                  ? invoice.total.toFixed(2)
-                  : (parseFloat(invoice.total) || 0).toFixed(2)}
+                <CurrencyDisplay
+                  amount={typeof invoice.total === 'number' ? invoice.total : (parseFloat(invoice.total) || 0)}
+                  baseCurrency={invoice.currency?.code || "CAD"}
+                  size="lg"
+                  className="text-white"
+                  showOriginal={true}
+                />
               </p>
             </div>
           </div>
@@ -346,6 +367,7 @@ const InvoiceDetails = () => {
           currency={{ symbol, code }}
           onClose={() => setShowPreview(false)}
           serviceTypes={serviceTypes}
+          language={language}
         />
       )}
     </div>

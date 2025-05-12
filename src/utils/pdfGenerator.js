@@ -8,7 +8,7 @@ import { DEFAULT_SERVICE_TYPES } from './constants';
 // Track if React-PDF is available
 let reactPdfAvailable = true;
 
-export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, currency, serviceTypes = DEFAULT_SERVICE_TYPES) => {
+export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, currency, serviceTypes = DEFAULT_SERVICE_TYPES, language = 'en') => {
     // If React-PDF failed in the past, go straight to fallback
     if (!reactPdfAvailable) {
         console.log('Using fallback PDF generator (React-PDF previously failed)');
@@ -25,7 +25,8 @@ export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, 
             businessInfo: businessInfo,
             paymentDetails: paymentDetails,
             currency: currency,
-            serviceTypes: serviceTypes
+            serviceTypes: serviceTypes,
+            language: language
         };
 
         // Generate PDF document using the component
@@ -67,7 +68,7 @@ export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, 
 };
 
 // Generate a PDF blob without downloading it, for use in email attachments
-export const generatePDFBlob = async (invoice, businessInfo, paymentDetails, currency, serviceTypes = DEFAULT_SERVICE_TYPES) => {
+export const generatePDFBlob = async (invoice, businessInfo, paymentDetails, currency, serviceTypes = DEFAULT_SERVICE_TYPES, language = 'en') => {
     // If React-PDF failed in the past, return null as we can't generate a blob with fallback
     if (!reactPdfAvailable) {
         console.log('Cannot generate PDF blob - React-PDF unavailable');
@@ -83,7 +84,8 @@ export const generatePDFBlob = async (invoice, businessInfo, paymentDetails, cur
             businessInfo: businessInfo,
             paymentDetails: paymentDetails,
             currency: currency,
-            serviceTypes: serviceTypes
+            serviceTypes: serviceTypes,
+            language: language
         };
 
         // Generate PDF document using the component

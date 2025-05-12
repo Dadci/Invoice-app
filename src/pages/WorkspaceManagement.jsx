@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { BiPlus, BiPencil, BiTrash, BiCheck, BiX, BiChevronLeft, BiHelpCircle, BiReset } from 'react-icons/bi';
+import { BiPlus, BiPencil, BiTrash, BiCheck, BiX, BiChevronLeft, BiHelpCircle, BiReset, BiSearch } from 'react-icons/bi';
 import {
     createWorkspace,
     updateWorkspace,
@@ -12,7 +12,6 @@ import {
 import { setActiveWorkspaceInvoices } from '../store/invoicesSlice';
 import { setActiveWorkspaceProjects, reinitializeProjectStore } from '../store/projectsSlice';
 import { setActiveWorkspaceSettings } from '../store/settingsSlice';
-import Header from '../components/Header';
 import { fadeIn } from '../utils/animations';
 import OnboardingDialog from '../components/OnboardingDialog';
 
@@ -40,6 +39,12 @@ const WorkspaceManagement = () => {
     });
     const [showNewForm, setShowNewForm] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Function to check if the workspace is the only one left
+    const isOnlyWorkspace = (workspaceId) => {
+        return workspaces.length <= 1;
+    };
 
     // Handle input changes for workspace form
     const handleInputChange = (e) => {
@@ -140,43 +145,68 @@ const WorkspaceManagement = () => {
         }
     };
 
-    return (
-        <div className="max-w-6xl mx-auto flex flex-col gap-8 px-6 md:px-8 pb-16">
-            <Header />
+    // Filter workspaces based on search query
+    const filteredWorkspaces = useMemo(() => {
+        if (!searchQuery.trim()) return workspaces;
 
-            <div className="flex items-center justify-between">
+        const query = searchQuery.toLowerCase();
+        return workspaces.filter(workspace =>
+            workspace.name.toLowerCase().includes(query) ||
+            (workspace.description && workspace.description.toLowerCase().includes(query))
+        );
+    }, [workspaces, searchQuery]);
+
+    return (
+        <div className="max-w-6xl mx-auto flex flex-col gap-8 px-6 md:px-8 py-12">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center">
                     <Link to="/" className="mr-4 text-light-text-secondary dark:text-dark-text-secondary hover:text-[#7C5DFA]">
                         <BiChevronLeft size={24} />
                     </Link>
-                    <h1 className="text-xl font-bold text-light-text dark:text-dark-text">Workspaces</h1>
+                    <h1 className="text-2xl font-bold text-light-text dark:text-dark-text">Workspaces</h1>
                 </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={handleShowOnboarding}
-                        className="px-4 py-2 border border-[#7C5DFA] text-[#7C5DFA] rounded-md flex items-center gap-2 hover:bg-[#7C5DFA]/10 transition-colors"
-                    >
-                        <BiHelpCircle size={18} />
-                        <span>Setup Guide</span>
-                    </button>
-                    {!showNewForm && (
+
+                <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                    <div className="relative flex-grow md:w-64">
+                        <input
+                            type="text"
+                            placeholder="Search workspaces..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full px-4 py-2 pr-10 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text"
+                        />
+                        <BiSearch
+                            size={18}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-light-text-secondary dark:text-dark-text-secondary"
+                        />
+                    </div>
+
+                    <div className="flex gap-2">
                         <button
-                            onClick={() => setShowNewForm(true)}
+                            onClick={handleShowOnboarding}
+                            className="px-4 py-2 border border-[#7C5DFA] text-[#7C5DFA] rounded-md flex items-center gap-2 hover:bg-[#7C5DFA]/10 transition-colors"
+                        >
+                            <BiHelpCircle size={18} />
+                            <span className="hidden sm:inline">Setup Guide</span>
+                        </button>
+
+                        <Link
+                            to="/workspaces/new"
                             className="px-4 py-2 bg-[#7C5DFA] text-white rounded-md flex items-center gap-2 hover:bg-[#9277FF] transition-colors"
                         >
                             <BiPlus size={18} />
-                            <span>New Workspace</span>
+                            <span className="hidden sm:inline">New Workspace</span>
+                        </Link>
+
+                        <button
+                            onClick={handleFixWorkspaceData}
+                            className="hidden sm:flex px-4 py-2 border border-[#EC5757] text-[#EC5757] rounded-md items-center gap-2 hover:bg-[#EC5757]/10 transition-colors"
+                            title="Emergency: Fix workspace data issues"
+                        >
+                            <BiReset size={18} />
+                            <span>Fix Data</span>
                         </button>
-                    )}
-                    {/* Debug button - hidden in a way that's still accessible for admin/debugging */}
-                    <button
-                        onClick={handleFixWorkspaceData}
-                        className="hidden sm:flex px-4 py-2 border border-[#EC5757] text-[#EC5757] rounded-md items-center gap-2 hover:bg-[#EC5757]/10 transition-colors"
-                        title="Emergency: Fix workspace data issues"
-                    >
-                        <BiReset size={18} />
-                        <span>Fix Data</span>
-                    </button>
+                    </div>
                 </div>
             </div>
 
@@ -186,95 +216,29 @@ const WorkspaceManagement = () => {
                 variants={fadeIn}
                 className="bg-white dark:bg-dark-card rounded-lg shadow-sm p-6"
             >
-                {/* Create new workspace form */}
-                {showNewForm && (
-                    <div className="mb-8 p-4 border border-light-border dark:border-dark-border rounded-lg">
-                        <h2 className="text-lg font-bold text-light-text dark:text-dark-text mb-4">Create New Workspace</h2>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
-                                    Workspace Name
-                                </label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    placeholder="e.g. Freelance Projects"
-                                    className="w-full px-4 py-2 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
-                                    Description (Optional)
-                                </label>
-                                <input
-                                    type="text"
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    placeholder="e.g. For all my freelance clients"
-                                    className="w-full px-4 py-2 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-2">
-                                Color
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                {WORKSPACE_COLORS.map(color => (
-                                    <button
-                                        key={color}
-                                        type="button"
-                                        onClick={() => handleColorSelect(color)}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center ${formData.color === color ? 'ring-2 ring-offset-2 ring-light-border dark:ring-dark-border' : ''}`}
-                                        style={{ backgroundColor: color }}
-                                    >
-                                        {formData.color === color && <BiCheck className="text-white" size={18} />}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="mt-6 flex justify-end gap-2">
-                            <button
-                                onClick={() => setShowNewForm(false)}
-                                className="px-4 py-2 border border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-md"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveWorkspace}
-                                className="px-4 py-2 bg-[#7C5DFA] text-white rounded-md"
-                                disabled={!formData.name.trim()}
-                            >
-                                Create Workspace
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {/* Workspaces list */}
-                <div className="grid grid-cols-1 gap-4">
-                    {workspaces.map(workspace => (
-                        <div
+                <div className="flex flex-col gap-4">
+                    {filteredWorkspaces.map(workspace => (
+                        <motion.div
                             key={workspace.id}
-                            className={`p-4 border ${currentWorkspace?.id === workspace.id ? 'border-[#7C5DFA]' : 'border-light-border dark:border-dark-border'} rounded-lg bg-light-bg dark:bg-dark-bg flex justify-between items-center`}
+                            whileHover={{ scale: 1.01 }}
+                            transition={{ duration: 0.2 }}
+                            className={`overflow-hidden rounded-lg transition-all duration-200 border shadow-sm ${currentWorkspace?.id === workspace.id
+                                ? 'border-[#7C5DFA] border-opacity-50 ring-2 ring-[#7C5DFA] ring-opacity-20'
+                                : 'border-light-border dark:border-dark-border hover:shadow-md'
+                                }`}
                         >
                             {editingWorkspace === workspace.id ? (
                                 // Edit mode
-                                <div className="w-full">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div className="w-full p-5">
+                                    <div className="space-y-4 mb-4">
                                         <input
                                             type="text"
                                             name="name"
                                             value={formData.name}
                                             onChange={handleInputChange}
-                                            className="px-3 py-2 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text"
+                                            placeholder="Workspace name"
+                                            className="w-full px-3 py-2 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text"
                                         />
                                         <input
                                             type="text"
@@ -282,7 +246,7 @@ const WorkspaceManagement = () => {
                                             value={formData.description}
                                             onChange={handleInputChange}
                                             placeholder="Description (optional)"
-                                            className="px-3 py-2 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text"
+                                            className="w-full px-3 py-2 border border-light-border dark:border-dark-border rounded-md bg-light-input dark:bg-dark-input text-light-text dark:text-dark-text"
                                         />
                                     </div>
 
@@ -292,7 +256,7 @@ const WorkspaceManagement = () => {
                                                 key={color}
                                                 type="button"
                                                 onClick={() => handleColorSelect(color)}
-                                                className={`w-6 h-6 rounded-full flex items-center justify-center ${formData.color === color ? 'ring-1 ring-offset-1 ring-light-border dark:ring-dark-border' : ''}`}
+                                                className={`w-8 h-8 rounded-full flex items-center justify-center ${formData.color === color ? 'ring-2 ring-offset-2 ring-[#7C5DFA]' : ''}`}
                                                 style={{ backgroundColor: color }}
                                             >
                                                 {formData.color === color && <BiCheck className="text-white" size={14} />}
@@ -318,22 +282,26 @@ const WorkspaceManagement = () => {
                                     </div>
                                 </div>
                             ) : (
-                                // View mode
-                                <>
+                                // View mode - Full width design
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full p-5 gap-4">
                                     <div className="flex items-center gap-3">
                                         <div
-                                            className="w-6 h-6 rounded-full flex-shrink-0"
+                                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
                                             style={{ backgroundColor: workspace.color }}
-                                        ></div>
+                                        >
+                                            {workspace.name.charAt(0).toUpperCase()}
+                                        </div>
                                         <div>
-                                            <h3 className="text-light-text dark:text-dark-text font-medium">
-                                                {workspace.name}
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-lg font-bold text-light-text dark:text-dark-text">
+                                                    {workspace.name}
+                                                </h3>
                                                 {currentWorkspace?.id === workspace.id && (
-                                                    <span className="ml-2 text-xs bg-[#7C5DFA]/10 text-[#7C5DFA] px-2 py-0.5 rounded-full">
+                                                    <span className="text-xs bg-[#7C5DFA]/10 text-[#7C5DFA] px-2 py-0.5 rounded-full">
                                                         Current
                                                     </span>
                                                 )}
-                                            </h3>
+                                            </div>
                                             {workspace.description && (
                                                 <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mt-1">
                                                     {workspace.description}
@@ -342,48 +310,67 @@ const WorkspaceManagement = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                        {currentWorkspace?.id !== workspace.id && (
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex gap-1 mr-2">
+                                            <button
+                                                onClick={() => handleEditWorkspace(workspace)}
+                                                className="p-1.5 text-light-text-secondary dark:text-dark-text-secondary hover:text-[#7C5DFA] rounded-full hover:bg-light-bg dark:hover:bg-dark-bg transition-colors"
+                                                title="Edit workspace"
+                                            >
+                                                <BiPencil size={16} />
+                                            </button>
+                                            {!isOnlyWorkspace(workspace.id) && (
+                                                <button
+                                                    onClick={() => handleDeleteWorkspace(workspace.id)}
+                                                    className="p-1.5 text-light-text-secondary dark:text-dark-text-secondary hover:text-[#EC5757] rounded-full hover:bg-light-bg dark:hover:bg-dark-bg transition-colors"
+                                                    title="Delete workspace"
+                                                >
+                                                    <BiTrash size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {currentWorkspace?.id !== workspace.id ? (
                                             <button
                                                 onClick={() => handleSwitchWorkspace(workspace.id)}
-                                                className="px-3 py-1 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-md text-sm hover:bg-[#7C5DFA]/10"
+                                                className="px-4 py-2 bg-[#7C5DFA] text-white rounded-md text-sm hover:bg-[#9277FF] transition-colors"
                                             >
-                                                Switch
+                                                Switch to Workspace
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => navigate('/')}
+                                                className="px-4 py-2 bg-[#7C5DFA]/10 text-[#7C5DFA] border border-[#7C5DFA] rounded-md text-sm hover:bg-[#7C5DFA]/20 transition-colors"
+                                            >
+                                                Go to Dashboard
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => handleEditWorkspace(workspace)}
-                                            className="p-1 text-light-text-secondary dark:text-dark-text-secondary hover:text-[#7C5DFA]"
-                                        >
-                                            <BiPencil size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteWorkspace(workspace.id)}
-                                            className="p-1 text-light-text-secondary dark:text-dark-text-secondary hover:text-[#EC5757]"
-                                            disabled={workspaces.length <= 1 || currentWorkspace?.id === workspace.id}
-                                        >
-                                            <BiTrash size={18} />
-                                        </button>
                                     </div>
-                                </>
+                                </div>
                             )}
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
 
-                {workspaces.length === 0 && (
-                    <div className="text-center py-10">
-                        <p className="text-light-text-secondary dark:text-dark-text-secondary">
-                            No workspaces found. Create your first workspace to get started.
-                        </p>
+                {filteredWorkspaces.length === 0 && (
+                    <div className="text-center py-12">
+                        <p className="text-light-text-secondary dark:text-dark-text-secondary mb-4">No workspaces found matching your search.</p>
+                        <Link
+                            to="/workspaces/new"
+                            className="inline-flex items-center px-4 py-2 bg-[#7C5DFA] text-white rounded-md hover:bg-[#9277FF] transition-colors"
+                        >
+                            <BiPlus size={18} className="mr-2" />
+                            Create New Workspace
+                        </Link>
                     </div>
                 )}
             </motion.div>
 
-            {/* Onboarding Dialog */}
-            <OnboardingDialog isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
+            {showOnboarding && (
+                <OnboardingDialog isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
+            )}
         </div>
     );
 };
 
-export default WorkspaceManagement; 
+export default WorkspaceManagement;
