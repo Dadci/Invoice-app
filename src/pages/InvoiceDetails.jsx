@@ -12,6 +12,7 @@ import StatusDropdown from "../components/StatusDropdown";
 import InvoicePreview from '../components/InvoicePreview';
 import { useState } from "react";
 import { testPdfGeneration } from "../utils/testPdf.jsx";
+import { DEFAULT_SERVICE_TYPES } from '../utils/constants';
 
 const InvoiceDetails = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const InvoiceDetails = () => {
   const { symbol = '£', code = 'GBP' } = settings.currency || {};
   const businessInfo = settings.businessInfo || {};
   const paymentDetails = settings.paymentDetails || {};
+  const serviceTypes = useSelector(state => state.settings?.serviceTypes || DEFAULT_SERVICE_TYPES);
   const [showPreview, setShowPreview] = useState(false);
 
   if (!invoice) {
@@ -45,7 +47,7 @@ const InvoiceDetails = () => {
   const handleExportPDF = async () => {
     try {
       toast.loading('Generating PDF...');
-      await generateInvoicePDF(invoice, businessInfo, paymentDetails, { symbol, code });
+      await generateInvoicePDF(invoice, businessInfo, paymentDetails, { symbol, code }, serviceTypes);
       toast.dismiss();
       toast.success('Invoice exported to PDF successfully');
     } catch (error) {
@@ -111,17 +113,17 @@ const InvoiceDetails = () => {
         {/* Left column (70%) - Invoice details */}
         <div className="w-full lg:w-[70%] bg-light-card dark:bg-dark-card p-8 rounded-lg shadow-sm flex flex-col transition-colors duration-200">
           <div className="flex justify-between items-start gap-6 md:gap-0">
-          <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-lg font-bold text-light-text dark:text-dark-text">
-              #{invoice.id}
-            </h1>
+                  #{invoice.id}
+                </h1>
               </div>
               <p className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">
-              {invoice.projectDescription}
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-1">
+                {invoice.projectDescription}
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-1">
               {invoice.senderName && (
                 <p className="text-[13px] font-bold text-light-text dark:text-dark-text">{invoice.senderName}</p>
               )}
@@ -132,35 +134,35 @@ const InvoiceDetails = () => {
               <p className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">{invoice.senderAddress?.city}</p>
               <p className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">{invoice.senderAddress?.postCode}</p>
               <p className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">{invoice.senderAddress?.country}</p>
+            </div>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-          <div className="flex flex-col gap-1">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            <div className="flex flex-col gap-1">
               <h2 className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">Invoice Date</h2>
               <p className="text-[15px] font-bold text-light-text dark:text-dark-text">
-              {format(new Date(invoice.createdAt), 'dd MMM yyyy')}
-            </p>
-          </div>
+                {format(new Date(invoice.createdAt), 'dd MMM yyyy')}
+              </p>
+            </div>
 
-          <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               <h2 className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">Bill To</h2>
               <p className="text-[15px] font-bold text-light-text dark:text-dark-text">{invoice.clientName}</p>
-          </div>
+            </div>
 
-          <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               <h2 className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">Send To</h2>
               <p className="text-[15px] font-bold text-light-text dark:text-dark-text">{invoice.clientEmail}</p>
+            </div>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-          <div className="flex flex-col gap-1">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            <div className="flex flex-col gap-1">
               <h2 className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">Payment Due</h2>
               <p className={`text-[15px] font-bold ${isOverdue ? 'text-[#EC5757]' : 'text-light-text dark:text-dark-text'}`}>
                 {formatDueDate()}
-            </p>
-          </div>
+              </p>
+            </div>
 
             <div className="flex flex-col gap-1 col-span-2">
               <h2 className="text-[13px] font-medium text-light-text-secondary dark:text-dark-text-secondary">Client Address</h2>
@@ -168,41 +170,53 @@ const InvoiceDetails = () => {
               <p className="text-[13px] font-medium text-light-text dark:text-dark-text">{invoice.clientAddress?.city}</p>
               <p className="text-[13px] font-medium text-light-text dark:text-dark-text">{invoice.clientAddress?.postCode}</p>
               <p className="text-[13px] font-medium text-light-text dark:text-dark-text">{invoice.clientAddress?.country}</p>
+            </div>
           </div>
-        </div>
-        
+
           <div className="mt-8 bg-[#F9FAFE] dark:bg-[#252945] rounded-lg overflow-hidden transition-colors duration-200">
             <div className="px-6 md:px-8 pt-6 md:pt-8 pb-4">
-            <table className="w-full">
-              <thead>
+              <table className="w-full">
+                <thead>
                   <tr className="text-[13px] text-light-text-secondary dark:text-dark-text-secondary">
                     <th className="text-left font-medium pb-4">Service Description</th>
                     <th className="text-center font-medium pb-4">Hours</th>
                     <th className="text-right font-medium pb-4">Rate</th>
-                  <th className="text-right font-medium pb-4">Total</th>
-                </tr>
-              </thead>
-              <tbody>
+                    <th className="text-right font-medium pb-4">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {invoice.items.map((item, index) => {
                     // Safely parse price and total to ensure they're numbers
                     const safePrice = typeof item.price === 'number' ? item.price : (parseFloat(item.price) || 0);
                     const safeTotal = typeof item.total === 'number' ? item.total : (parseFloat(item.total) || 0);
 
+                    // Get service type name if available
+                    const serviceType = item.serviceType && item.serviceType !== 'other'
+                      ? serviceTypes.find(type => type.id === item.serviceType)?.name
+                      : null;
+
                     return (
-                    <tr key={index} className="text-[15px] text-light-text dark:text-dark-text font-medium">
-                      <td className="py-3">{item.name}</td>
-                      <td className="text-center text-light-text-secondary dark:text-dark-text-secondary py-3">{item.quantity}</td>
+                      <tr key={index} className="text-[15px] text-light-text dark:text-dark-text font-medium">
+                        <td className="py-3">
+                          {item.name}
+                          {serviceType && (
+                            <span className="block text-xs text-light-text-secondary dark:text-dark-text-secondary mt-1">
+                              {serviceType}
+                            </span>
+                          )}
+                        </td>
+                        <td className="text-center text-light-text-secondary dark:text-dark-text-secondary py-3">{item.quantity}</td>
                         <td className="text-right text-light-text-secondary dark:text-dark-text-secondary py-3">{symbol} {safePrice.toFixed(2)}</td>
                         <td className="text-right font-bold py-3">{symbol} {safeTotal.toFixed(2)}</td>
-                  </tr>
+                      </tr>
                     );
                   })}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
 
             <div className="flex flex-row justify-between items-center w-full px-6 md:px-8 py-6 bg-[#373B53] dark:bg-[#0C0E16] rounded-b-lg transition-colors duration-200">
-            <p className="text-[15px] text-white font-normal">Amount Due</p>
+              <p className="text-[15px] text-white font-normal">Amount Due</p>
               <p className="text-[20px] text-white font-bold">
                 {symbol} {typeof invoice.total === 'number'
                   ? invoice.total.toFixed(2)
@@ -218,8 +232,8 @@ const InvoiceDetails = () => {
           <div className={`bg-light-card dark:bg-dark-card p-6 rounded-lg shadow-sm border-l-4 transition-colors duration-200
             ${invoice.status === 'paid' ? 'border-[#33D69F]' :
               invoice.status === 'sent' ? 'border-[#7C5DFA]' :
-              invoice.status === 'pending' ? 'border-[#FF8F00]' :
-                'border-[#373B53]'}`}
+                invoice.status === 'pending' ? 'border-[#FF8F00]' :
+                  'border-[#373B53]'}`}
           >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-[15px] font-bold text-light-text dark:text-dark-text">Payment Status</h2>
@@ -331,6 +345,7 @@ const InvoiceDetails = () => {
           paymentDetails={paymentDetails}
           currency={{ symbol, code }}
           onClose={() => setShowPreview(false)}
+          serviceTypes={serviceTypes}
         />
       )}
     </div>

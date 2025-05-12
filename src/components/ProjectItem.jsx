@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { BiUser, BiCalendar, BiDollar, BiFile, BiTime, BiRightArrowAlt, BiFlag } from 'react-icons/bi';
+import { BiUser, BiCalendar, BiDollar, BiFile, BiTime, BiChevronRight, BiFlag } from 'react-icons/bi';
 import { format } from 'date-fns';
-import { DEFAULT_SERVICE_TYPES, getServiceTypeColor } from '../utils/constants';
+import { DEFAULT_SERVICE_TYPES } from '../utils/constants';
 
-// Shared badge components
-const StatusBadge = ({ status }) => {
+// Status dot indicator
+const StatusDot = ({ status }) => {
     const styles = {
         active: { color: '#33D69F' },
         completed: { color: '#6460FF' },
@@ -18,20 +18,17 @@ const StatusBadge = ({ status }) => {
     const style = styles[status] || styles.draft;
 
     return (
-        <div
-            className="px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit"
-            style={{
-                backgroundColor: `${style.color}15`,
-                color: style.color
-            }}
-        >
-            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: style.color }}></div>
-            {status.replace('-', ' ')}
+        <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: style.color }}></div>
+            <span className="text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary capitalize">
+                {status.replace('-', ' ')}
+            </span>
         </div>
     );
 };
 
-const PriorityIndicator = ({ priority }) => {
+// Priority badge component
+const PriorityBadge = ({ priority }) => {
     const styles = {
         urgent: { color: '#EC5757' },
         high: { color: '#FF8F00' },
@@ -42,23 +39,17 @@ const PriorityIndicator = ({ priority }) => {
     const style = styles[priority] || styles.medium;
 
     return (
-        <div
-            className="flex items-center gap-1 text-xs font-medium"
-            style={{ color: style.color }}
-        >
-            <BiFlag size={12} />
-            {priority}
+        <div className="flex items-center gap-1">
+            <BiFlag size={12} style={{ color: style.color }} />
+            <span className="text-xs capitalize" style={{ color: style.color }}>{priority}</span>
         </div>
     );
 };
 
-// Service type label component
-const ServiceTypeLabel = ({ id, name }) => (
-    <span
-        className="inline-flex items-center justify-center h-5 px-1.5 rounded text-[10px] font-medium text-white leading-none"
-        style={{ backgroundColor: getServiceTypeColor(id) }}
-    >
-        {name}
+// Tag component with more subtle design
+const ProjectTag = ({ children }) => (
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-light-bg dark:bg-dark-bg text-light-text-secondary dark:text-dark-text-secondary border border-light-border dark:border-dark-border">
+        {children}
     </span>
 );
 
@@ -77,97 +68,77 @@ const ProjectItem = ({ project }) => {
     const hoursLogged = project.hoursLogged || 0;
     const hoursPercent = hoursEstimated > 0 ? Math.min((hoursLogged / hoursEstimated) * 100, 100) : 0;
 
-    // Progress bar color
-    const getProgressColor = () => {
-        if (hoursPercent >= 100) return '#6460FF';
-        if (hoursPercent > 75) return '#33D69F';
-        if (hoursPercent > 50) return '#7C5DFA';
-        if (hoursPercent > 25) return '#FF8F00';
-        return '#EC5757';
-    };
-
     // Get service types (limited to 2)
     const serviceTypeNames = project.serviceTypes?.map(typeId => {
         const serviceType = serviceTypes.find(type => type.id === typeId);
-        return serviceType ? { id: typeId, name: serviceType.name } : null;
+        return serviceType ? serviceType.name : null;
     }).filter(Boolean).slice(0, 2) || [];
 
     return (
         <Link
             to={`/project/${project.id}`}
-            className="block bg-light-card dark:bg-dark-card rounded-lg transition-all duration-200 hover:shadow-md group overflow-hidden border border-transparent hover:border-[#7C5DFA]/20"
+            className="group block bg-light-card dark:bg-dark-card rounded-lg transition-all duration-200 hover:shadow-md border border-light-border dark:border-dark-border hover:border-light-text-secondary/30 dark:hover:border-dark-text-secondary/30"
         >
-            <div className="p-5">
-                {/* Main content area */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div className="p-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                     {/* Left column - Project info */}
                     <div className="flex-1">
-                        {/* Project title and date */}
-                        <div className="flex items-start justify-between sm:justify-start gap-3 mb-2">
-                            <h3 className="text-base font-bold text-light-text dark:text-dark-text group-hover:text-[#7C5DFA] transition-colors duration-200">
+                        {/* Project title row with status and priority */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                            <h3 className="text-base font-semibold text-light-text dark:text-dark-text group-hover:text-primary transition-colors duration-200 line-clamp-1">
                                 {project.name}
                             </h3>
-                            <div className="flex items-center gap-1 text-light-text-secondary dark:text-dark-text-secondary text-xs">
-                                <BiCalendar size={12} />
-                                {formattedDate}
+                            <div className="flex items-center gap-3">
+                                {project.priority && <PriorityBadge priority={project.priority} />}
+                                <StatusDot status={project.status} />
                             </div>
                         </div>
 
-                        {/* Description */}
-                        <p className="text-light-text-secondary dark:text-dark-text-secondary text-xs mb-2 line-clamp-1">
-                            {project.description || 'No description provided'}
-                        </p>
+                        {/* Description (if available) */}
+                        {project.description && (
+                            <p className="text-xs text-light-text-secondary dark:text-dark-text-secondary mb-2 line-clamp-1">
+                                {project.description}
+                            </p>
+                        )}
 
-                        {/* Service Types */}
+                        {/* Project metadata row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-xs text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                            <div className="flex items-center gap-1.5">
+                                <BiCalendar size={12} />
+                                <span>{formattedDate}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <BiUser size={12} />
+                                <span className="truncate">{project.client || 'No client'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <BiDollar size={12} />
+                                <span>{symbol}{totalBilled.toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <BiTime size={12} />
+                                <span>{hoursLogged}/{hoursEstimated} hrs</span>
+                            </div>
+                        </div>
+
+                        {/* Tags */}
                         {serviceTypeNames.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-3">
-                                {serviceTypeNames.map(serviceType => (
-                                    <ServiceTypeLabel
-                                        key={serviceType.id}
-                                        id={serviceType.id}
-                                        name={serviceType.name}
-                                    />
+                            <div className="hidden sm:flex flex-wrap gap-1.5 mb-1.5">
+                                {serviceTypeNames.map(name => (
+                                    <ProjectTag key={name}>{name}</ProjectTag>
                                 ))}
                                 {project.serviceTypes?.length > 2 && (
-                                    <span className="inline-flex items-center justify-center h-5 px-1.5 rounded text-[10px] leading-none bg-light-bg dark:bg-dark-bg text-light-text-secondary dark:text-dark-text-secondary">
-                                        +{project.serviceTypes.length - 2}
-                                    </span>
+                                    <ProjectTag>+{project.serviceTypes.length - 2} more</ProjectTag>
                                 )}
                             </div>
                         )}
-
-                        {/* Project Meta Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1 text-xs">
-                            <div className="flex items-center gap-1.5">
-                                <BiUser className="text-light-text-secondary dark:text-dark-text-secondary" size={14} />
-                                <span className="text-light-text dark:text-dark-text">
-                                    {project.client || 'No client'}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <BiTime className="text-light-text-secondary dark:text-dark-text-secondary" size={14} />
-                                <span className="text-light-text dark:text-dark-text">
-                                    {hoursLogged}/{hoursEstimated} hrs
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <BiDollar className="text-light-text-secondary dark:text-dark-text-secondary" size={14} />
-                                <span className="text-light-text dark:text-dark-text font-medium">
-                                    {symbol}{totalBilled.toFixed(2)}
-                                </span>
-                            </div>
-                        </div>
                     </div>
 
-                    {/* Right column - Status badges */}
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2">
-                        <StatusBadge status={project.status} />
-                        {project.priority && <PriorityIndicator priority={project.priority} />}
-                        <div className="hidden sm:flex sm:items-center sm:mt-auto">
-                            <span className="text-[#7C5DFA] text-xs font-medium flex items-center gap-1 group-hover:translate-x-1 transition-all duration-200">
-                                View Details
-                                <BiRightArrowAlt size={16} className="transition-transform group-hover:translate-x-1 duration-200" />
-                            </span>
+                    {/* Right column - Action and details */}
+                    <div className="flex items-start justify-end pt-1">
+                        <div className="flex items-center px-3 py-1 rounded-full bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text text-xs font-medium group-hover:text-primary transition-colors duration-200">
+                            View details
+                            <BiChevronRight className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200" />
                         </div>
                     </div>
                 </div>
@@ -184,17 +155,13 @@ const ProjectItem = ({ project }) => {
                         <div className="text-xs text-light-text-secondary dark:text-dark-text-secondary">
                             {Math.round(hoursPercent)}% completed
                         </div>
-                        <span className="sm:hidden text-[#7C5DFA] text-xs font-medium flex items-center gap-1">
-                            View
-                            <BiRightArrowAlt size={16} />
-                        </span>
                     </div>
 
-                    {/* Hours Progress Bar */}
-                    <div className="h-1.5 bg-light-border dark:bg-dark-border rounded-full overflow-hidden">
+                    {/* Simplified progress bar */}
+                    <div className="h-1 bg-light-border dark:bg-dark-border rounded-full overflow-hidden">
                         <div
-                            className="h-full transition-all duration-300"
-                            style={{ width: `${hoursPercent}%`, backgroundColor: getProgressColor() }}
+                            className="h-full transition-all duration-300 bg-light-text-secondary dark:bg-dark-text-secondary"
+                            style={{ width: `${hoursPercent}%` }}
                         ></div>
                     </div>
                 </div>

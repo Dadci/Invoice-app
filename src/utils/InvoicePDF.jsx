@@ -317,9 +317,19 @@ const renderClientAddress = (clientAddress) => {
 };
 
 // Create function to render table rows
-const renderTableRows = (items, currency) => {
-    return items.map((item, index) =>
-        React.createElement(
+const renderTableRows = (items, currency, serviceTypes = []) => {
+    return items.map((item, index) => {
+        // Get service type name if available
+        const serviceType = item.serviceType && item.serviceType !== 'other'
+            ? serviceTypes.find(type => type.id === item.serviceType)?.name
+            : null;
+
+        // Item description with service type if available
+        const description = serviceType
+            ? `${item.name} (${serviceType})`
+            : item.name;
+
+        return React.createElement(
             View,
             {
                 key: index,
@@ -328,12 +338,12 @@ const renderTableRows = (items, currency) => {
                     ...(index % 2 === 1 ? styles.tableRowEven : {})
                 }
             },
-            React.createElement(Text, { style: styles.tableCol1 }, item.name),
+            React.createElement(Text, { style: styles.tableCol1 }, description),
             React.createElement(Text, { style: styles.tableCol2 }, item.quantity),
             React.createElement(Text, { style: styles.tableCol3 }, `${currency.symbol}${parseFloat(item.price || 0).toFixed(2)}`),
             React.createElement(Text, { style: styles.tableCol4 }, `${currency.symbol}${parseFloat(item.total || 0).toFixed(2)}`)
-        )
-    );
+        );
+    });
 };
 
 // Create function to render payment information
@@ -406,7 +416,7 @@ const renderStatusBadge = (status) => {
 
 // Invoice document component without JSX
 const InvoicePDF = (props) => {
-    const { invoice, businessInfo, paymentDetails, currency } = props;
+    const { invoice, businessInfo, paymentDetails, currency, serviceTypes = [] } = props;
 
     return React.createElement(
         Document,
@@ -488,12 +498,12 @@ const InvoicePDF = (props) => {
                     View,
                     { style: styles.tableHeader },
                     React.createElement(Text, { style: styles.tableCol1 }, 'ITEM DESCRIPTION'),
-                    React.createElement(Text, { style: styles.tableCol2 }, 'QTY'),
+                    React.createElement(Text, { style: styles.tableCol2 }, 'HOURS'),
                     React.createElement(Text, { style: styles.tableCol3 }, 'RATE'),
                     React.createElement(Text, { style: styles.tableCol4 }, 'AMOUNT')
                 ),
 
-                ...renderTableRows(invoice.items, currency),
+                ...renderTableRows(invoice.items, currency, serviceTypes),
 
                 React.createElement(
                     View,

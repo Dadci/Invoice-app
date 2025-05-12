@@ -55,7 +55,11 @@ const InvoiceItem = ({ invoice, isBulkMode = false, isSelected = false, onToggle
     const handleEdit = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dispatch(toggleModal(invoice));
+        dispatch(toggleModal({
+            type: 'editInvoice',
+            id: invoice.id,
+            ...invoice
+        }));
     };
 
     const handleDelete = (e) => {

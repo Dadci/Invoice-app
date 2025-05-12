@@ -103,7 +103,7 @@ const Header = () => {
                     <GenerateInvoiceButton />
 
                     <button
-                        onClick={() => dispatch(toggleModal())}
+                        onClick={() => dispatch(toggleModal({ type: 'addInvoice' }))}
                         className="bg-[#7C5DFA] hover:bg-[#9277FF] text-white py-2 px-4 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors duration-200"
                     >
                         <BiPlus size={20} />

@@ -6,7 +6,18 @@ import { setActiveWorkspaceInvoices } from "../store/invoicesSlice";
 import { setActiveWorkspaceProjects } from "../store/projectsSlice";
 import { setActiveWorkspaceSettings } from "../store/settingsSlice";
 import logo from "../assets/logo.svg";
-import { BiFolder, BiHome, BiCog, BiSun, BiMoon, BiBuildings, BiPlus } from "react-icons/bi";
+import {
+  BiFolder,
+  BiHome,
+  BiCog,
+  BiSun,
+  BiMoon,
+  BiBuildings,
+  BiPlus,
+  BiChevronDown,
+  BiSearch,
+  BiCheck
+} from "react-icons/bi";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -17,10 +28,12 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const desktopMenuRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const profileButtonRef = useRef(null);
   const mobileButtonRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // Close workspace menu when clicking outside
   useEffect(() => {
@@ -34,6 +47,7 @@ const Sidebar = () => {
       if (!clickedInsideDesktopMenu && !clickedInsideMobileMenu &&
         !clickedProfileButton && !clickedMobileButton) {
         setWorkspaceMenuOpen(false);
+        setSearchText("");
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -42,12 +56,22 @@ const Sidebar = () => {
     };
   }, []);
 
+  // Focus search input when menu opens
+  useEffect(() => {
+    if (workspaceMenuOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current.focus();
+      }, 100);
+    }
+  }, [workspaceMenuOpen]);
+
   const handleToggleTheme = () => {
     dispatch(toggleTheme());
   };
 
   const handleWorkspaceClick = () => {
     setWorkspaceMenuOpen(!workspaceMenuOpen);
+    setSearchText("");
   };
 
   const handleWorkspaceSelect = (workspace) => {
@@ -61,6 +85,7 @@ const Sidebar = () => {
 
     // Close the menu after selection
     setWorkspaceMenuOpen(false);
+    setSearchText("");
 
     // Navigate directly to dashboard without delay
     console.log(`Switching to workspace ${workspace.id} from sidebar and navigating to dashboard`);
@@ -70,6 +95,12 @@ const Sidebar = () => {
   const getInitials = (name) => {
     return name.split(' ').map(word => word[0]).join('').toUpperCase();
   };
+
+  // Filter workspaces based on search text
+  const filteredWorkspaces = workspaces.filter(w => {
+    if (!searchText.trim()) return true;
+    return w.name.toLowerCase().includes(searchText.toLowerCase());
+  });
 
   return (
     <div className="fixed top-0 left-0 z-50 w-full md:w-24 h-16 md:h-screen flex md:flex-col justify-between bg-[#373B53] md:rounded-r-[20px]">
@@ -135,15 +166,22 @@ const Sidebar = () => {
             onClick={handleWorkspaceClick}
             className="relative group"
             ref={profileButtonRef}
+            aria-label="Select workspace"
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold border border-white"
-              style={{ backgroundColor: currentWorkspace?.color || '#7C5DFA' }}
-              title={currentWorkspace?.name || 'Personal'}
-            >
-              <span className="flex items-center justify-center w-full h-full text-center absolute inset-0 m-auto">
-                {getInitials(currentWorkspace?.name || 'Personal')}
-              </span>
+            {/* Improved workspace icon */}
+            <div className="flex flex-col items-center">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold border-2 border-white/50 shadow-md transition-all duration-200 transform group-hover:scale-105"
+                style={{ backgroundColor: currentWorkspace?.color || '#7C5DFA' }}
+                title={currentWorkspace?.name || 'Personal'}
+              >
+                <span className="text-sm">
+                  {getInitials(currentWorkspace?.name || 'Personal')}
+                </span>
+              </div>
+              <div className="flex items-center mt-1 text-white/70 text-xs font-medium">
+                <BiChevronDown className={`w-4 h-4 transition-transform duration-300 ${workspaceMenuOpen ? 'rotate-180' : ''}`} />
+              </div>
             </div>
           </button>
         </div>
@@ -165,14 +203,19 @@ const Sidebar = () => {
         <div className="md:hidden relative">
           <button
             onClick={handleWorkspaceClick}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold border border-white relative"
-            style={{ backgroundColor: currentWorkspace?.color || '#7C5DFA' }}
+            className="group flex items-center gap-1"
             aria-label="Select workspace"
             ref={mobileButtonRef}
           >
-            <span className="flex items-center justify-center w-full h-full text-center absolute inset-0 m-auto">
-              {getInitials(currentWorkspace?.name || 'Personal')}
-            </span>
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold border-2 border-white/50 shadow-md transition-all duration-200"
+              style={{ backgroundColor: currentWorkspace?.color || '#7C5DFA' }}
+            >
+              <span className="text-xs">
+                {getInitials(currentWorkspace?.name || 'Personal')}
+              </span>
+            </div>
+            <BiChevronDown className={`w-4 h-4 text-white transition-transform duration-300 ${workspaceMenuOpen ? 'rotate-180' : ''}`} />
           </button>
         </div>
 
@@ -180,61 +223,97 @@ const Sidebar = () => {
         {workspaceMenuOpen && (
           <div
             ref={desktopMenuRef}
-            className="hidden md:block fixed left-28 bottom-8 w-64 bg-[#252945] rounded-md shadow-lg overflow-visible z-[100]"
+            className="hidden md:block fixed left-28 bottom-8 w-72 bg-light-card dark:bg-[#252945] rounded-md shadow-lg overflow-visible z-[100]"
             style={{ boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}
           >
             {/* Arrow pointing to the profile */}
-            <div className="absolute -left-2 bottom-2 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#252945] border-b-8 border-b-transparent"></div>
+            <div className="absolute -left-2 bottom-2 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-light-card dark:border-r-[#252945] border-b-8 border-b-transparent"></div>
 
-            <div className="p-2 border-b border-[#373B53]">
-              <p className="text-xs text-white/70 mb-1 px-2">Current workspace</p>
-              <div className="flex items-center gap-2 p-2 bg-[#2D3250] rounded-md">
+            <div className="p-3 border-b border-light-border dark:border-[#373B53]">
+              <p className="text-xs text-light-text-secondary dark:text-white/70 mb-2 font-medium">Current workspace</p>
+              <div className="flex items-center gap-3 p-2 bg-light-bg dark:bg-[#2D3250] rounded-md">
                 <div
-                  className="w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center text-white font-bold text-xs relative"
+                  className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-sm relative"
                   style={{ backgroundColor: currentWorkspace?.color }}
                 >
-                  <span className="flex items-center justify-center w-full h-full text-center absolute inset-0 m-auto">
-                    {getInitials(currentWorkspace?.name || 'Personal')}
-                  </span>
+                  {getInitials(currentWorkspace?.name || 'Personal')}
+                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-400 rounded-md flex items-center justify-center border-2 border-light-card dark:border-[#2D3250]">
+                    <BiCheck size={9} className="text-white" />
+                  </div>
                 </div>
-                <span className="text-sm text-white font-medium truncate">{currentWorkspace?.name}</span>
+                <div className="flex-1">
+                  <span className="block text-sm text-light-text dark:text-white font-medium truncate">{currentWorkspace?.name}</span>
+                  <span className="text-xs text-light-text-secondary dark:text-white/50">Active workspace</span>
+                </div>
               </div>
             </div>
 
-            <div className="max-h-[300px] overflow-y-auto py-1">
-              {workspaces.filter(w => w.id !== currentWorkspace?.id).map(workspace => (
-                <button
-                  key={workspace.id}
-                  onClick={() => handleWorkspaceSelect(workspace)}
-                  className="w-full text-left px-3 py-2 text-sm flex items-center hover:bg-[#2D3250] transition-colors text-white"
-                >
-                  <div
-                    className="w-5 h-5 rounded-md mr-2 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs relative"
-                    style={{ backgroundColor: workspace.color }}
-                  >
-                    <span className="flex items-center justify-center w-full h-full text-center absolute inset-0 m-auto">
-                      {getInitials(workspace.name)}
-                    </span>
-                  </div>
-                  <span className="truncate">{workspace.name}</span>
-                </button>
-              ))}
+            {/* Search input */}
+            <div className="p-3 border-b border-light-border dark:border-[#373B53]">
+              <div className="relative">
+                <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-light-text-secondary dark:text-white/50" size={16} />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search workspaces..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="w-full h-9 pl-9 pr-3 text-sm rounded-md border border-light-border dark:border-[#373B53] bg-light-bg dark:bg-[#1E2139] text-light-text dark:text-white focus:outline-none focus:ring-1 focus:ring-[#7C5DFA]"
+                />
+              </div>
+            </div>
+
+            <div className="max-h-[300px] overflow-y-auto">
+              {filteredWorkspaces.length > 0 ? (
+                <div className="py-2">
+                  {filteredWorkspaces
+                    .filter(w => w.id !== currentWorkspace?.id)
+                    .map(workspace => (
+                      <button
+                        key={workspace.id}
+                        onClick={() => handleWorkspaceSelect(workspace)}
+                        className="w-full text-left px-3 py-2 text-sm flex items-center hover:bg-light-bg dark:hover:bg-[#2D3250] transition-colors text-light-text dark:text-white"
+                      >
+                        <div
+                          className="w-7 h-7 rounded-lg mr-3 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-sm"
+                          style={{ backgroundColor: workspace.color }}
+                        >
+                          {getInitials(workspace.name)}
+                        </div>
+                        <span className="truncate">{workspace.name}</span>
+                      </button>
+                    ))
+                  }
+                </div>
+              ) : searchText ? (
+                <div className="py-6 text-center text-light-text-secondary dark:text-white/50 text-sm">
+                  No workspaces match your search
+                </div>
+              ) : (
+                <div className="py-4 text-center text-light-text-secondary dark:text-white/50 text-sm">
+                  No other workspaces available
+                </div>
+              )}
             </div>
 
             {/* Workspace management options */}
-            <div className="border-t border-[#373B53] mt-1 pt-1 pb-1 px-1">
+            <div className="border-t border-light-border dark:border-[#373B53] py-2 px-2">
               <Link
                 to="/workspaces/new"
-                className="w-full text-left px-3 py-2 text-sm flex items-center text-white hover:bg-[#2D3250] transition-colors rounded"
+                className="w-full text-left px-3 py-2.5 text-sm flex items-center text-light-text dark:text-white hover:bg-light-bg dark:hover:bg-[#2D3250] transition-colors rounded-md"
               >
-                <BiPlus className="w-4 h-4 mr-2" />
+                <div className="w-7 h-7 rounded-lg bg-[#7C5DFA]/20 flex items-center justify-center mr-3">
+                  <BiPlus className="w-4 h-4 text-[#7C5DFA]" />
+                </div>
                 <span>New Workspace</span>
               </Link>
               <Link
                 to="/workspaces"
-                className="w-full text-left px-3 py-2 text-sm flex items-center text-white hover:bg-[#2D3250] transition-colors rounded"
+                className="w-full text-left px-3 py-2.5 text-sm flex items-center text-light-text dark:text-white hover:bg-light-bg dark:hover:bg-[#2D3250] transition-colors rounded-md"
               >
-                <BiBuildings className="w-4 h-4 mr-2" />
+                <div className="w-7 h-7 rounded-lg bg-[#7C5DFA]/20 flex items-center justify-center mr-3">
+                  <BiBuildings className="w-4 h-4 text-[#7C5DFA]" />
+                </div>
                 <span>Manage Workspaces</span>
               </Link>
             </div>
@@ -245,57 +324,92 @@ const Sidebar = () => {
         {workspaceMenuOpen && (
           <div
             ref={mobileMenuRef}
-            className="md:hidden fixed left-0 right-0 top-16 mx-4 w-auto bg-[#252945] rounded-md shadow-lg overflow-visible z-[100]"
+            className="md:hidden fixed left-0 right-0 top-16 mx-4 w-auto bg-light-card dark:bg-[#252945] rounded-md shadow-lg overflow-visible z-[100]"
             style={{ boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}
           >
-            <div className="p-2 border-b border-[#373B53]">
-              <p className="text-xs text-white/70 mb-1 px-2">Current workspace</p>
-              <div className="flex items-center gap-2 p-2 bg-[#2D3250] rounded-md">
+            <div className="p-3 border-b border-light-border dark:border-[#373B53]">
+              <p className="text-xs text-light-text-secondary dark:text-white/70 mb-2 font-medium">Current workspace</p>
+              <div className="flex items-center gap-3 p-2 bg-light-bg dark:bg-[#2D3250] rounded-md">
                 <div
-                  className="w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center text-white font-bold text-xs relative"
+                  className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-sm relative"
                   style={{ backgroundColor: currentWorkspace?.color }}
                 >
-                  <span className="flex items-center justify-center w-full h-full text-center absolute inset-0 m-auto">
-                    {getInitials(currentWorkspace?.name || 'Personal')}
-                  </span>
+                  {getInitials(currentWorkspace?.name || 'Personal')}
+                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-400 rounded-md flex items-center justify-center border-2 border-light-card dark:border-[#2D3250]">
+                    <BiCheck size={9} className="text-white" />
+                  </div>
                 </div>
-                <span className="text-sm text-white font-medium truncate">{currentWorkspace?.name}</span>
+                <div className="flex-1">
+                  <span className="block text-sm text-light-text dark:text-white font-medium truncate">{currentWorkspace?.name}</span>
+                  <span className="text-xs text-light-text-secondary dark:text-white/50">Active workspace</span>
+                </div>
               </div>
             </div>
 
-            <div className="max-h-[300px] overflow-y-auto py-1">
-              {workspaces.filter(w => w.id !== currentWorkspace?.id).map(workspace => (
-                <button
-                  key={workspace.id}
-                  onClick={() => handleWorkspaceSelect(workspace)}
-                  className="w-full text-left px-3 py-2 text-sm flex items-center hover:bg-[#2D3250] transition-colors text-white"
-                >
-                  <div
-                    className="w-5 h-5 rounded-md mr-2 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs relative"
-                    style={{ backgroundColor: workspace.color }}
-                  >
-                    <span className="flex items-center justify-center w-full h-full text-center absolute inset-0 m-auto">
-                      {getInitials(workspace.name)}
-                    </span>
-                  </div>
-                  <span className="truncate">{workspace.name}</span>
-                </button>
-              ))}
+            {/* Search input for mobile */}
+            <div className="p-3 border-b border-light-border dark:border-[#373B53]">
+              <div className="relative">
+                <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-light-text-secondary dark:text-white/50" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search workspaces..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="w-full h-9 pl-9 pr-3 text-sm rounded-md border border-light-border dark:border-[#373B53] bg-light-bg dark:bg-[#1E2139] text-light-text dark:text-white focus:outline-none focus:ring-1 focus:ring-[#7C5DFA]"
+                />
+              </div>
             </div>
 
-            <div className="border-t border-[#373B53] mt-1 pt-1 pb-1 px-1">
+            <div className="max-h-[300px] overflow-y-auto">
+              {filteredWorkspaces.length > 0 ? (
+                <div className="py-2">
+                  {filteredWorkspaces
+                    .filter(w => w.id !== currentWorkspace?.id)
+                    .map(workspace => (
+                      <button
+                        key={workspace.id}
+                        onClick={() => handleWorkspaceSelect(workspace)}
+                        className="w-full text-left px-3 py-2 text-sm flex items-center hover:bg-light-bg dark:hover:bg-[#2D3250] transition-colors text-light-text dark:text-white"
+                      >
+                        <div
+                          className="w-7 h-7 rounded-lg mr-3 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-sm"
+                          style={{ backgroundColor: workspace.color }}
+                        >
+                          {getInitials(workspace.name)}
+                        </div>
+                        <span className="truncate">{workspace.name}</span>
+                      </button>
+                    ))
+                  }
+                </div>
+              ) : searchText ? (
+                <div className="py-6 text-center text-light-text-secondary dark:text-white/50 text-sm">
+                  No workspaces match your search
+                </div>
+              ) : (
+                <div className="py-4 text-center text-light-text-secondary dark:text-white/50 text-sm">
+                  No other workspaces available
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-light-border dark:border-[#373B53] py-2 px-2">
               <Link
                 to="/workspaces/new"
-                className="w-full text-left px-3 py-2 text-sm flex items-center text-white hover:bg-[#2D3250] transition-colors rounded"
+                className="w-full text-left px-3 py-2.5 text-sm flex items-center text-light-text dark:text-white hover:bg-light-bg dark:hover:bg-[#2D3250] transition-colors rounded-md"
               >
-                <BiPlus className="w-4 h-4 mr-2" />
+                <div className="w-7 h-7 rounded-lg bg-[#7C5DFA]/20 flex items-center justify-center mr-3">
+                  <BiPlus className="w-4 h-4 text-[#7C5DFA]" />
+                </div>
                 <span>New Workspace</span>
               </Link>
               <Link
                 to="/workspaces"
-                className="w-full text-left px-3 py-2 text-sm flex items-center text-white hover:bg-[#2D3250] transition-colors rounded"
+                className="w-full text-left px-3 py-2.5 text-sm flex items-center text-light-text dark:text-white hover:bg-light-bg dark:hover:bg-[#2D3250] transition-colors rounded-md"
               >
-                <BiBuildings className="w-4 h-4 mr-2" />
+                <div className="w-7 h-7 rounded-lg bg-[#7C5DFA]/20 flex items-center justify-center mr-3">
+                  <BiBuildings className="w-4 h-4 text-[#7C5DFA]" />
+                </div>
                 <span>Manage Workspaces</span>
               </Link>
             </div>

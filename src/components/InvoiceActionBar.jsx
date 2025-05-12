@@ -50,7 +50,11 @@ const InvoiceActionBar = ({ invoice, onExportPDF, onPreviewPDF, onTestPDF }) => 
     }
 
     const handleEdit = () => {
-        dispatch(toggleModal(invoice))
+        dispatch(toggleModal({
+            type: 'editInvoice',
+            id: invoice.id,
+            ...invoice
+        }))
     }
 
     const handleEmailInvoice = () => {

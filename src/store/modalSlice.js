@@ -9,10 +9,16 @@ const modalSlice = createSlice({
     },
     reducers: {
         toggleModal: (state, action) => {
-            // Toggle modal state
-            state.isOpen = !state.isOpen
+            // Check how the action was dispatched
+            if (action.payload && action.payload.type === 'addInvoice') {
+                // For the "New Invoice" button case
+                state.isOpen = true
+                state.editingInvoice = null
+                state.projectToInvoice = null
+            } else if (action.payload) {
+                // Toggle modal state
+                state.isOpen = !state.isOpen
 
-            if (action.payload) {
                 // Reset previous values
                 state.editingInvoice = null
                 state.projectToInvoice = null
@@ -25,6 +31,7 @@ const modalSlice = createSlice({
                 }
             } else {
                 // Reset when closing
+                state.isOpen = false
                 state.editingInvoice = null
                 state.projectToInvoice = null
             }

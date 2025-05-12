@@ -301,6 +301,7 @@ const ProjectDetails = () => {
     const handleCreateInvoice = () => {
         // Open the invoice modal with this project pre-selected
         dispatch(toggleModal({
+            type: 'addInvoice',
             projectToInvoice: project.id
         }));
 

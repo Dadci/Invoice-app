@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { PDFViewer } from '@react-pdf/renderer';
 import InvoicePDF from '../utils/InvoicePDF';
 import { FiX, FiDownload } from 'react-icons/fi';
+import { useSelector } from 'react-redux';
+import { DEFAULT_SERVICE_TYPES } from '../utils/constants';
 
 const InvoicePreview = ({ invoice, businessInfo, paymentDetails, currency, onClose }) => {
     const [renderError, setRenderError] = useState(false);
+    const serviceTypes = useSelector(state => state.settings?.serviceTypes || DEFAULT_SERVICE_TYPES);
 
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -49,7 +52,8 @@ const InvoicePreview = ({ invoice, businessInfo, paymentDetails, currency, onClo
                                         invoice: invoice,
                                         businessInfo: businessInfo,
                                         paymentDetails: paymentDetails,
-                                        currency: currency
+                                        currency: currency,
+                                        serviceTypes: serviceTypes
                                     };
 
                                     const pdfDocument = InvoicePDF(props);

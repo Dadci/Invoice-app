@@ -228,7 +228,7 @@ const AddInvoiceModal = () => {
             }
 
             // Reset form and close modal
-            dispatch(toggleModal(null));
+            dispatch(toggleModal());
         } catch (error) {
             console.error("Error creating/updating invoice:", error);
             toast.error('Something went wrong. Please try again.');

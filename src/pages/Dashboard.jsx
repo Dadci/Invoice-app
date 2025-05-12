@@ -14,9 +14,9 @@ const EnhancedDashboardCard = ({
   value,
   icon,
   color,
-  bgColor,
+  lightBgColor,
   darkBgColor,
-  borderColor,
+  accentColor,
   subtitle,
   secondaryValue,
   trend = 0,
@@ -32,9 +32,8 @@ const EnhancedDashboardCard = ({
   return (
     <motion.div
       variants={slideUp}
-      className={`${theme === 'dark' ? darkBgColor : bgColor} rounded-lg overflow-hidden shadow flex flex-col transition-all duration-200 hover:shadow-md transform hover:-translate-y-1`}
+      className={`${theme === 'dark' ? darkBgColor : lightBgColor} rounded-lg overflow-hidden shadow flex flex-col transition-all duration-200 hover:shadow-md transform hover:-translate-y-1`}
       style={{
-        borderLeft: `4px solid ${borderColor}`,
         height: height || 'auto'
       }}
       whileHover={{ scale: 1.01 }}
@@ -79,9 +78,6 @@ const EnhancedDashboardCard = ({
           </div>
         </div>
       </div>
-
-      {/* Bottom stripe decoration */}
-      <div className={`h-1 w-full ${color} opacity-70`}></div>
     </motion.div>
   );
 };
@@ -219,9 +215,9 @@ const Dashboard = () => {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"></path>
           </svg>}
           color="bg-[#7C5DFA]"
-          bgColor="bg-white"
+          lightBgColor="bg-[#7C5DFA]/5"
           darkBgColor="bg-dark-card"
-          borderColor="#7C5DFA"
+          accentColor="#7C5DFA"
           trend={dashboardMetrics.revenueTrend}
           height={cardHeight}
         />
@@ -234,9 +230,9 @@ const Dashboard = () => {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
           </svg>}
           color="bg-[#FF8F00]"
-          bgColor="bg-white"
+          lightBgColor="bg-[#FF8F00]/5"
           darkBgColor="bg-dark-card"
-          borderColor="#FF8F00"
+          accentColor="#FF8F00"
           trend={dashboardMetrics.pendingTrend}
           height={cardHeight}
         />
@@ -249,9 +245,9 @@ const Dashboard = () => {
             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
           </svg>}
           color="bg-[#33D69F]"
-          bgColor="bg-white"
+          lightBgColor="bg-[#33D69F]/5"
           darkBgColor="bg-dark-card"
-          borderColor="#33D69F"
+          accentColor="#33D69F"
           trend={dashboardMetrics.paidTrend}
           height={cardHeight}
         />
@@ -264,9 +260,9 @@ const Dashboard = () => {
             <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path>
           </svg>}
           color="bg-[#EC5757]"
-          bgColor="bg-white"
+          lightBgColor="bg-[#EC5757]/5"
           darkBgColor="bg-dark-card"
-          borderColor="#EC5757"
+          accentColor="#EC5757"
           trend={currentMonthData.projectTrend}
           height={cardHeight}
         />
@@ -279,26 +275,29 @@ const Dashboard = () => {
         variants={fadeIn}
         className="mt-2"
       >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
-          <div className="flex flex-row items-center justify-center gap-2 mb-2 sm:mb-0">
-            <h2 className="text-xl font-bold text-light-text dark:text-dark-text">Your Invoices</h2>
-            <p className="text-xs sm:text-sm text-light-text-secondary dark:text-dark-text-secondary font-medium mt-1 transition-colors duration-200">
-              ({invoices.length})
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => dispatch(toggleModal())}
-              className="md:hidden bg-[#7C5DFA] hover:bg-[#9277FF] text-white py-2 px-4 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors duration-200"
-            >
-              <BiPlus size={20} />
-            </button>
-          </div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-light-text dark:text-dark-text transition-colors duration-200">Invoices</h2>
+
+          <button
+            onClick={() => dispatch(toggleModal({ type: 'addInvoice' }))}
+            className="bg-[#7C5DFA] hover:bg-[#9277FF] transition-colors text-white py-2 px-4 rounded-full flex items-center gap-2 text-sm font-medium"
+          >
+            <BiPlus size={18} />
+            <span className="hidden md:inline">New Invoice</span>
+          </button>
         </div>
 
-        <div>
-          {invoices.length === 0 ? <EmptyState /> : <InvoiceContainer />}
-        </div>
+        {invoices.length ? (
+          <InvoiceContainer invoices={invoices} />
+        ) : (
+          <EmptyState
+            title="There are no invoices yet"
+            description="Get started by creating your first invoice. Click the 'New Invoice' button to begin."
+            buttonText="New Invoice"
+            icon={<BiReceipt className="w-16 h-16 text-light-text-secondary dark:text-dark-text-secondary opacity-30" />}
+            onButtonClick={() => dispatch(toggleModal({ type: 'addInvoice' }))}
+          />
+        )}
       </motion.div>
 
       <AddInvoiceModal />

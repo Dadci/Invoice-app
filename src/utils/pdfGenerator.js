@@ -3,11 +3,12 @@ import { pdf } from '@react-pdf/renderer';
 import InvoicePDF from './InvoicePDF';
 import { generateFallbackPDF } from './fallbackPdfGenerator';
 import { testPdfGeneration } from './testPdf.jsx';
+import { DEFAULT_SERVICE_TYPES } from './constants';
 
 // Track if React-PDF is available
 let reactPdfAvailable = true;
 
-export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, currency) => {
+export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, currency, serviceTypes = DEFAULT_SERVICE_TYPES) => {
     // If React-PDF failed in the past, go straight to fallback
     if (!reactPdfAvailable) {
         console.log('Using fallback PDF generator (React-PDF previously failed)');
@@ -23,7 +24,8 @@ export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, 
             invoice: invoice,
             businessInfo: businessInfo,
             paymentDetails: paymentDetails,
-            currency: currency
+            currency: currency,
+            serviceTypes: serviceTypes
         };
 
         // Generate PDF document using the component
@@ -65,7 +67,7 @@ export const generateInvoicePDF = async (invoice, businessInfo, paymentDetails, 
 };
 
 // Generate a PDF blob without downloading it, for use in email attachments
-export const generatePDFBlob = async (invoice, businessInfo, paymentDetails, currency) => {
+export const generatePDFBlob = async (invoice, businessInfo, paymentDetails, currency, serviceTypes = DEFAULT_SERVICE_TYPES) => {
     // If React-PDF failed in the past, return null as we can't generate a blob with fallback
     if (!reactPdfAvailable) {
         console.log('Cannot generate PDF blob - React-PDF unavailable');
@@ -80,7 +82,8 @@ export const generatePDFBlob = async (invoice, businessInfo, paymentDetails, cur
             invoice: invoice,
             businessInfo: businessInfo,
             paymentDetails: paymentDetails,
-            currency: currency
+            currency: currency,
+            serviceTypes: serviceTypes
         };
 
         // Generate PDF document using the component
