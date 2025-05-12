@@ -4,12 +4,30 @@ const modalSlice = createSlice({
     name: 'modal',
     initialState: {
         isOpen: false,
-        editingInvoice: null
+        editingInvoice: null,
+        projectToInvoice: null
     },
     reducers: {
         toggleModal: (state, action) => {
+            // Toggle modal state
             state.isOpen = !state.isOpen
-            state.editingInvoice = action.payload
+
+            if (action.payload) {
+                // Reset previous values
+                state.editingInvoice = null
+                state.projectToInvoice = null
+
+                // Check if we're editing an invoice or creating from a project
+                if (action.payload.id) {
+                    state.editingInvoice = action.payload
+                } else if (action.payload.projectToInvoice) {
+                    state.projectToInvoice = action.payload.projectToInvoice
+                }
+            } else {
+                // Reset when closing
+                state.editingInvoice = null
+                state.projectToInvoice = null
+            }
         }
     }
 })

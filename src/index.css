@@ -3,6 +3,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles for theme transition */
+:root {
+  color-scheme: light;
+  background-color: #F8F8FB;
+}
+
+:root.dark {
+  color-scheme: dark;
+  background-color: #141625;
+}
+
+html {
+  transition: background-color 0.3s ease;
+}
+
+body {
+  background-color: inherit;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
 * {
   font-family: 'League Spartan', sans-serif;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
 }

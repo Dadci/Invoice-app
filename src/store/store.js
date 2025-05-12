@@ -1,10 +1,22 @@
 import { configureStore } from '@reduxjs/toolkit'
+import invoicesReducer from './invoicesSlice'
 import modalReducer from './modalSlice'
-import invoiceReducer from './invoicesSlice'
+import settingsReducer from './settingsSlice'
+import themeReducer from './themeSlice'
+import projectsReducer from './projectsSlice'
+import notificationsReducer from './notificationsSlice'
+import workspacesReducer from './workspacesSlice'
 
 export const store = configureStore({
     reducer: {
+        invoices: invoicesReducer,
         modal: modalReducer,
-        invoices: invoiceReducer
+        settings: settingsReducer,
+        theme: themeReducer,
+        projects: projectsReducer,
+        notifications: notificationsReducer,
+        workspaces: workspacesReducer
     }
 })
+
+export default store
