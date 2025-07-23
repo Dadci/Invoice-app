@@ -1,5 +1,5 @@
 import { BiChevronLeft } from "react-icons/bi";
-import { FiDownload } from "react-icons/fi";
+
 import InvoiceActionBar from "../components/InvoiceActionBar";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -7,7 +7,7 @@ import { format, isPast, isToday } from "date-fns";
 import AddInvoiceModal from "../components/AddInvoiceModal";
 import { generateInvoicePDF } from "../utils/pdfGenerator";
 import toast from 'react-hot-toast';
-import StatusBadge from "../components/StatusBadge";
+
 import StatusDropdown from "../components/StatusDropdown";
 import InvoicePreview from '../components/InvoicePreview';
 import { useState } from "react";
@@ -234,6 +234,9 @@ const InvoiceDetails = () => {
 
             <div className="flex flex-row justify-between items-center w-full px-6 md:px-8 py-6 bg-[#373B53] dark:bg-[#0C0E16] rounded-b-lg transition-colors duration-200">
               <p className="text-[15px] text-white font-normal">Amount Due</p>
+              <p className="text-sm text-white/70 mt-1">
+                Total Hours: {invoice.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)}
+              </p>
               <p className="text-[20px] text-white font-bold">
                 <CurrencyDisplay
                   amount={typeof invoice.total === 'number' ? invoice.total : (parseFloat(invoice.total) || 0)}

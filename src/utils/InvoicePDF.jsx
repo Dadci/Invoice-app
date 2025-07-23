@@ -25,7 +25,7 @@ Font.register({
 // Create styles with improved design
 const styles = StyleSheet.create({
     page: {
-        padding: 40,
+        padding: 30,
         fontSize: 10,
         fontFamily: 'Inter',
         backgroundColor: '#FFFFFF',
@@ -34,11 +34,11 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 40,
+        marginBottom: 25,
     },
     logo: {
         height: 40,
-        marginBottom: 20,
+        marginBottom: 15,
     },
     invoiceTitle: {
         fontSize: 28,
@@ -65,10 +65,10 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#E2E8F0',
         width: '100%',
-        marginVertical: 20,
+        marginVertical: 15,
     },
     section: {
-        marginBottom: 20,
+        marginBottom: 15,
     },
     sectionHeader: {
         fontSize: 12,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     col2: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 30,
+        marginBottom: 20,
     },
     col: {
         flex: 1,
@@ -120,16 +120,14 @@ const styles = StyleSheet.create({
         color: '#1E293B',
     },
     table: {
-        display: 'flex',
         width: '100%',
-        borderRadius: 4,
-        marginBottom: 30,
-        marginTop: 20,
+        marginBottom: 15,
+        marginTop: 15,
     },
     tableHeader: {
         flexDirection: 'row',
         backgroundColor: '#F1F5F9',
-        padding: 12,
+        padding: 10,
         fontSize: 10,
         fontWeight: 'bold',
         color: '#475569',
@@ -142,7 +140,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: '#F1F5F9',
-        padding: 12,
+        padding: 10,
+        wrap: false,
     },
     tableRowEven: {
         backgroundColor: '#F8FAFC',
@@ -169,9 +168,10 @@ const styles = StyleSheet.create({
     },
     totalsSection: {
         marginTop: 10,
-        paddingTop: 10,
+        paddingTop: 15,
         borderTopWidth: 1,
         borderTopColor: '#E2E8F0',
+        wrap: false,
     },
     total: {
         flexDirection: 'row',
@@ -195,10 +195,11 @@ const styles = StyleSheet.create({
     },
     invoiceTotalWrapper: {
         marginTop: 10,
+        wrap: false,
     },
     invoiceTotal: {
         marginTop: 2,
-        padding: 16,
+        padding: 12,
         backgroundColor: '#F1F5F9',
         borderRadius: 4,
         flexDirection: 'row',
@@ -215,37 +216,38 @@ const styles = StyleSheet.create({
         color: '#1E293B',
     },
     paymentInfo: {
-        marginTop: 30,
-        padding: 20,
+        marginTop: 15,
+        padding: 12,
         backgroundColor: '#F8FAFC',
         borderRadius: 4,
         borderLeftWidth: 4,
         borderLeftColor: '#64748B',
+        wrap: false,
     },
     paymentInfoTitle: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginBottom: 6,
         color: '#1E293B',
     },
     paymentRow: {
         flexDirection: 'row',
-        marginBottom: 6,
+        marginBottom: 4,
     },
     paymentLabel: {
-        fontSize: 10,
+        fontSize: 9,
         color: '#64748B',
-        width: 80,
+        width: 70,
     },
     paymentValue: {
-        fontSize: 10,
+        fontSize: 9,
         color: '#334155',
         fontWeight: 'medium',
     },
     thankYou: {
-        marginTop: 40,
+        marginTop: 15,
         textAlign: 'center',
-        fontSize: 12,
+        fontSize: 11,
         color: '#64748B',
         fontWeight: 'medium',
     },
@@ -353,47 +355,32 @@ const renderPaymentInfo = (paymentDetails, invoiceId, t) => {
         return null;
     }
 
-    const rows = [];
+    const elements = [];
+
+    // Add title
+    elements.push(
+        React.createElement(Text, { key: 'title', style: { ...styles.label, marginTop: 15, marginBottom: 6 } }, t.paymentInformation)
+    );
 
     if (paymentDetails.bankName) {
-        rows.push(
-            React.createElement(
-                View,
-                { key: 'bank', style: styles.paymentRow },
-                React.createElement(Text, { style: styles.paymentLabel }, t.bankName),
-                React.createElement(Text, { style: styles.paymentValue }, paymentDetails.bankName)
-            )
+        elements.push(
+            React.createElement(Text, { key: 'bank', style: { ...styles.value, marginBottom: 3 } }, `${t.bankName}: ${paymentDetails.bankName}`)
         );
     }
 
     if (paymentDetails.iban) {
-        rows.push(
-            React.createElement(
-                View,
-                { key: 'iban', style: styles.paymentRow },
-                React.createElement(Text, { style: styles.paymentLabel }, t.iban),
-                React.createElement(Text, { style: styles.paymentValue }, paymentDetails.iban)
-            )
+        elements.push(
+            React.createElement(Text, { key: 'iban', style: { ...styles.value, marginBottom: 3 } }, `${t.iban}: ${paymentDetails.iban}`)
         );
     }
 
     if (paymentDetails.swiftBic) {
-        rows.push(
-            React.createElement(
-                View,
-                { key: 'swift', style: styles.paymentRow },
-                React.createElement(Text, { style: styles.paymentLabel }, t.swiftBic),
-                React.createElement(Text, { style: styles.paymentValue }, paymentDetails.swiftBic)
-            )
+        elements.push(
+            React.createElement(Text, { key: 'swift', style: { ...styles.value, marginBottom: 3 } }, `${t.swiftBic}: ${paymentDetails.swiftBic}`)
         );
     }
 
-    return React.createElement(
-        View,
-        { style: styles.paymentInfo },
-        React.createElement(Text, { style: styles.paymentInfoTitle }, t.paymentInformation),
-        ...rows
-    );
+    return elements;
 };
 
 // Status badge component
@@ -425,11 +412,11 @@ const InvoicePDF = (props) => {
         {},
         React.createElement(
             Page,
-            { size: 'A4', style: styles.page },
+            { size: 'A4', style: styles.page, wrap: true },
             // Header
             React.createElement(
                 View,
-                { style: styles.header },
+                { style: styles.header, wrap: false },
                 React.createElement(
                     View,
                     {},
@@ -445,12 +432,12 @@ const InvoicePDF = (props) => {
             ),
 
             // Divider
-            React.createElement(View, { style: styles.divider }),
+            React.createElement(View, { style: styles.divider, wrap: false }),
 
             // Client and Invoice Info
             React.createElement(
                 View,
-                { style: styles.col2 },
+                { style: styles.col2, wrap: false },
                 React.createElement(
                     View,
                     { style: styles.col },
@@ -492,10 +479,10 @@ const InvoicePDF = (props) => {
                 )
             ),
 
-            // Items Table
+            // Items Table Header
             React.createElement(
                 View,
-                { style: styles.table },
+                { style: { ...styles.table, wrap: false } },
                 React.createElement(
                     View,
                     { style: styles.tableHeader },
@@ -503,19 +490,25 @@ const InvoicePDF = (props) => {
                     React.createElement(Text, { style: styles.tableCol2 }, t.hours),
                     React.createElement(Text, { style: styles.tableCol3 }, t.rate),
                     React.createElement(Text, { style: styles.tableCol4 }, t.amount)
-                ),
+                )
+            ),
 
-                ...renderTableRows(invoice.items, currency, serviceTypes),
+            // Items Table Rows (these can break across pages)
+            React.createElement(
+                View,
+                { style: { width: '100%' } },
+                ...renderTableRows(invoice.items, currency, serviceTypes)
+            ),
 
+            // Totals Section (keep together on one page)
+            React.createElement(
+                View,
+                { style: styles.totalsSection, wrap: false },
                 React.createElement(
                     View,
-                    { style: styles.totalsSection },
-                    React.createElement(
-                        View,
-                        { style: styles.total },
-                        React.createElement(Text, { style: styles.totalLabel }, t.subtotal),
-                        React.createElement(Text, { style: styles.totalValue }, `${currency.symbol}${parseFloat(invoice.total || 0).toFixed(2)}`)
-                    )
+                    { style: styles.total },
+                    React.createElement(Text, { style: styles.totalLabel }, t.subtotal),
+                    React.createElement(Text, { style: styles.totalValue }, `${currency.symbol}${parseFloat(invoice.total || 0).toFixed(2)}`)
                 ),
 
                 React.createElement(
@@ -531,7 +524,7 @@ const InvoicePDF = (props) => {
             ),
 
             // Payment Information
-            renderPaymentInfo(paymentDetails, invoice.id, t),
+            ...renderPaymentInfo(paymentDetails, invoice.id, t),
 
             // Thank You Note
             React.createElement(Text, { style: styles.thankYou }, t.thankYou),

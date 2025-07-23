@@ -234,7 +234,7 @@ const CreateWorkspace = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleSelectTemplate(template)}
-                        className="bg-white dark:bg-dark-card p-6 rounded-lg border-2 border-transparent hover:border-[#7C5DFA] cursor-pointer transition-all duration-200 hover:shadow-md"
+                        className="bg-white dark:bg-dark-card p-6 rounded-lg border-2 border-transparent hover:border-[#7C5DFA] cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-[#F9FAFE] dark:hover:bg-dark-bg"
                     >
                         <div className="flex items-center gap-4 mb-3">
                             <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: template.color }}>

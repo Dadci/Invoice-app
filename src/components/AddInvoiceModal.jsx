@@ -599,7 +599,7 @@ const AddInvoiceModal = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary flex items-center gap-2">
                                             <BiUser className="text-[#7C5DFA]" />
-                                            Client's Name
+                                            Client&apos;s Name
                                         </label>
                                         <input
                                             type="text"
@@ -612,7 +612,7 @@ const AddInvoiceModal = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary flex items-center gap-2">
                                             <BiEnvelope className="text-[#7C5DFA]" />
-                                            Client's Email
+                                            Client&apos;s Email
                                         </label>
                                         <input
                                             type="email"
@@ -626,7 +626,7 @@ const AddInvoiceModal = () => {
                                     <div className="pt-2">
                                         <label className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary flex items-center gap-2 mb-2">
                                             <BiHomeAlt className="text-[#7C5DFA]" />
-                                            Client's Address
+                                            Client&apos;s Address
                                         </label>
                                         <div className="space-y-3">
                                             <input
